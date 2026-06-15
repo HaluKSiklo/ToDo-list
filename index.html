@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jot - 3D Audio Edition</title>
+<title>Jot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -109,10 +109,12 @@
     min-height: var(--line-h);
     position: relative;
     gap: 10px;
-    transition: opacity 0.15s;
+    transition: opacity 0.15s, background-color 0.15s;
   }
-  .item.dragging { opacity: 0.3; }
-  .item.drag-over { border-top: 1.5px solid #BEBEBA; }
+  
+  /* ドラッグ中のスタイル指定 */
+  .item.dragging { opacity: 0.3; background-color: #fafafa; }
+  .item.drag-over { border-top: 2px solid var(--text-main); }
 
   /* ドラッグハンドル */
   .drag-handle {
@@ -130,7 +132,9 @@
     justify-content: center;
     gap: 2.5px;
     padding: 2px;
+    z-index: 10;
   }
+  .drag-handle:active { cursor: grabbing; }
   .drag-handle span { display: block; width: 10px; height: 1px; background: var(--check-border); }
   .item:hover .drag-handle { opacity: 1; }
 
@@ -313,7 +317,6 @@
   .drawer-btn:hover { color: var(--text-heading); }
   .drawer-btn svg { flex-shrink: 0; opacity: 0.5; }
 
-  /* インポート用隠しinput */
   #import-input { display: none; }
 
   /* ===== ヒント ===== */
@@ -343,7 +346,6 @@
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* ===== モバイル ===== */
   @media (max-width: 600px) {
     :root { --page-l: 40px; --page-r: 24px; --page-t: 44px; }
     #hint { display: none; }
@@ -390,7 +392,7 @@
       <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Enter</kbd> タスクを追加<br>
       <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Shift+Enter</kbd> 改行<br>
       <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">#</kbd> 見出し <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">-</kbd> メモ<br>
-      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Backspace</kbd> 前を編集・削除<br>
+      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Backspace</kbd> 空行で前を編集<br>
       <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Drag</kbd> 並び替え
     </div>
   </div>
@@ -401,7 +403,7 @@
   <ul id="items"></ul>
   <div id="new-input">
     <div class="input-checkbox-ghost"></div>
-    <input id="new-input-field" type="text" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="立体音響で書く...">
+    <input id="new-input-field" type="text" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="書く...">
   </div>
 </div>
 
@@ -428,11 +430,11 @@ function loadPage(key) { const a = loadAll(); return a[key] || { items: [] }; }
 function savePage(key, pg) { const a = loadAll(); a[key] = pg; saveAll(a); }
 function uid() { return Math.random().toString(36).slice(2,10); }
 
-// ===== 3D立体音響・限界爆発アナログ音響エンジン =====
+// ===== 💻 Surface純正キーボード立体音響合成エンジン =====
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function createHeavyNoise() {
-  const bufferSize = audioCtx.sampleRate * 0.4; 
+  const bufferSize = audioCtx.sampleRate * 0.3; 
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
@@ -440,19 +442,26 @@ function createHeavyNoise() {
 }
 const noiseBuffer = createHeavyNoise();
 
-const keyPositionMap = {
-  'q':-0.9, 'a':-0.85, 'z':-0.8, 'w':-0.7, 's':-0.65, 'x':-0.6,
-  'e':-0.5, 'd':-0.45, 'c':-0.4, 'r':-0.3, 'f':-0.25, 'v':-0.2,
-  't':-0.1, 'g':-0.05, 'b': 0.0, 'y': 0.1, 'h': 0.15, 'n': 0.2,
-  'u': 0.3, 'j': 0.35, 'm': 0.4, 'i': 0.5, 'k': 0.55, ',': 0.6,
-  'o': 0.7, 'l': 0.75, '.': 0.8, 'p': 0.9, ';': 0.95, '/': 1.0,
-  ':': 1.0, 'Enter': 1.0, 'Backspace': 0.9
+// Surface Pro Type Cover / Surface Laptop の物理配列実測マッピング (-1.0=左端, 1.0=右端)
+const surfaceKeyPanMap = {
+  // 1段目
+  '1':-0.84, '2':-0.71, '3':-0.58, '4':-0.45, '5':-0.32, '6':-0.19, '7':-0.06, '8':0.07, '9':0.20, '0':0.33, '-':0.46, '^':0.59, '¥':0.72, 'Backspace':0.90,
+  // 2段目
+  'q':-0.80, 'w':-0.67, 'e':-0.54, 'r':-0.41, 't':-0.28, 'y':-0.15, 'u':-0.02, 'i':0.11, 'o':0.24, 'p':0.37, '@':0.50, '[':0.63, 'Enter':0.88,
+  // 3段目
+  'a':-0.76, 's':-0.63, 'd':-0.50, 'f':-0.37, 'g':-0.24, 'h':-0.11, 'j':0.02, 'k':0.15, 'l':0.28, ';':0.41, ':':0.54, ']':0.67,
+  // 4段目
+  'z':-0.70, 'x':-0.57, 'c':-0.44, 'v':-0.31, 'b':-0.18, 'n':-0.05, 'm':0.08, ',':0.21, '.':0.34, '/':0.47, '_':0.60,
+  // 特殊
+  ' ': 0.00
 };
 
-function getKeyPan(key) {
+function getSurfacePan(key) {
   if (!key) return 0;
-  if (keyPositionMap[key] !== undefined) return keyPositionMap[key];
-  return (Math.random() * 2 - 1) * 0.2;
+  if (surfaceKeyPanMap[key] !== undefined) return surfaceKeyPanMap[key];
+  const upper = key.toUpperCase();
+  if (surfaceKeyPanMap[upper] !== undefined) return surfaceKeyPanMap[upper];
+  return (Math.random() * 2 - 1) * 0.15; // マップに無いキーは微細な中央ランダム
 }
 
 function unlockAudio() {
@@ -462,22 +471,25 @@ window.addEventListener('click', unlockAudio);
 window.addEventListener('touchstart', unlockAudio);
 window.addEventListener('keydown', unlockAudio);
 
-function playRetroSound(type, keyName = '') {
+function playSurfaceSound(type, keyName = '') {
   unlockAudio();
   const now = audioCtx.currentTime;
 
   const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-  const initialPan = (type === 'space') ? 0 : getKeyPan(keyName);
+  const targetPan = (type === 'space') ? 0.0 : getSurfacePan(keyName);
+  
   if (panner) {
-    panner.pan.setValueAtTime(initialPan, now);
+    panner.pan.setValueAtTime(targetPan, now);
   }
 
+  // 物理キー位置による音響減衰シミュレーション
   const filter = audioCtx.createBiquadFilter();
   filter.type = 'lowpass';
-  const edgeFactor = Math.abs(initialPan);
-  const cutoffFreq = 3500 - (edgeFactor * 1800) + (Math.random() * 400);
+  const panAbs = Math.abs(targetPan);
+  // キーが端に行くほど高音域がわずかに遮蔽される特性を再現
+  const cutoffFreq = 4200 - (panAbs * 1500) + (Math.random() * 200);
   filter.frequency.setValueAtTime(cutoffFreq, now);
-  filter.Q.setValueAtTime(1.5 + (edgeFactor * 3.5), now);
+  filter.Q.setValueAtTime(1.2 + (panAbs * 2.0), now);
 
   if (panner) {
     filter.connect(panner);
@@ -486,107 +498,58 @@ function playRetroSound(type, keyName = '') {
     filter.connect(audioCtx.destination);
   }
 
-  function playExplosiveClick(basePitch, volume, noiseMix, duration, isSpace = false, isDelete = false) {
-    const pitchJitter = (Math.random() * 2 - 1) * (isSpace ? 40 : (isDelete ? 80 : 130));
-    const finalPitch = Math.max(25, basePitch + pitchJitter);
-    const dynamicVol = volume * (0.8 + Math.random() * 0.4) * (1 + edgeFactor * 0.2);
+  // アナログタイピング音の合成
+  function synthClick(baseFreq, volume, noiseMix, duration, isSpace = false, isDelete = false) {
+    const jitter = (Math.random() * 2 - 1) * (isSpace ? 20 : (isDelete ? 40 : 60));
+    const frequency = Math.max(40, baseFreq + jitter);
+    const dynamicVol = volume * (0.85 + Math.random() * 0.3);
 
-    const strikeDelay = Math.random() * 0.006; 
-
+    // 1. パンタグラフの打鍵衝撃波（アタック）
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
-    osc1.type = (isSpace || isDelete) ? 'sawtooth' : 'triangle';
-    osc1.frequency.setValueAtTime(finalPitch, now + strikeDelay);
-    osc1.frequency.exponentialRampToValueAtTime(finalPitch * 0.3, now + strikeDelay + duration);
-    gain1.gain.setValueAtTime(dynamicVol, now + strikeDelay);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + strikeDelay + duration);
+    osc1.type = isSpace ? 'triangle' : 'sine';
+    osc1.frequency.setValueAtTime(frequency, now);
+    osc1.frequency.exponentialRampToValueAtTime(frequency * 0.4, now + duration);
+    gain1.gain.setValueAtTime(dynamicVol, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
+    // 2. 底打ちの金属反響高周波成分
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
     osc2.type = 'square';
-    osc2.frequency.setValueAtTime(finalPitch * 1.9, now);
-    osc2.frequency.exponentialRampToValueAtTime(finalPitch * 0.5, now + 0.018);
-    gain2.gain.setValueAtTime(dynamicVol * 0.5, now);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+    osc2.frequency.setValueAtTime(frequency * 2.4, now);
+    osc2.frequency.exponentialRampToValueAtTime(frequency * 0.8, now + 0.01);
+    gain2.gain.setValueAtTime(dynamicVol * 0.3, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
 
-    const osc3 = audioCtx.createOscillator();
-    const gain3 = audioCtx.createGain();
-    osc3.type = 'sine';
-    osc3.frequency.setValueAtTime(finalPitch * 0.45, now);
-    gain3.gain.setValueAtTime(dynamicVol * (isDelete ? 1.3 : 0.8), now);
-    gain3.gain.exponentialRampToValueAtTime(0.001, now + (isSpace ? 0.14 : (isDelete ? 0.1 : 0.05)));
-
+    // 3. Surface特有の静音性キートップ擦れ音（ホワイトノイズ）
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
-    noiseGain.gain.setValueAtTime(dynamicVol * (noiseMix + edgeFactor * 1.5), now);
-    noiseGain.gain.exponentialRampToValueAtTime(dynamicVol * 0.12, now + 0.01);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.9);
+    noiseGain.gain.setValueAtTime(dynamicVol * noiseMix, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.8);
 
     osc1.connect(gain1); gain1.connect(filter);
     osc2.connect(gain2); gain2.connect(filter);
-    osc3.connect(gain3); gain3.connect(filter);
     noise.connect(noiseGain); noiseGain.connect(filter);
 
-    osc1.start(now + strikeDelay); osc1.stop(now + strikeDelay + duration + 0.01);
+    osc1.start(now); osc1.stop(now + duration + 0.01);
     osc2.start(now); osc2.stop(now + 0.02);
-    osc3.start(now); osc3.stop(now + 0.14);
-    noise.start(now); noise.stop(now + duration + 0.02);
+    noise.start(now); noise.stop(now + duration + 0.01);
   }
 
   switch (type) {
     case 'type': 
-      const randomBase = 320 + Math.random() * 160;
-      playExplosiveClick(randomBase, 0.35, 3.8, 0.045);
+      synthClick(380, 0.28, 2.2, 0.04);
       break;
-
     case 'space': 
-      playExplosiveClick(75, 0.6, 2.8, 0.12, true);
+      synthClick(120, 0.45, 1.8, 0.09, true);
       break;
-
-    case 'add': 
-      playExplosiveClick(55, 0.7, 4.8, 0.25, true);
-      
-      const industrialBells = [875, 1290, 1780, 2240];
-      industrialBells.forEach((freq, idx) => {
-        const bell = audioCtx.createOscillator();
-        const bellGain = audioCtx.createGain();
-        const bellPanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-        const bellJitter = (Math.random() * 2 - 1) * 20;
-        
-        bell.type = 'sine';
-        bell.frequency.setValueAtTime(freq + bellJitter, now);
-        
-        const bVol = idx === 0 ? 0.35 : 0.1;
-        bellGain.gain.setValueAtTime(bVol, now);
-        bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
-        
-        if (bellPanner) {
-          bellPanner.pan.setValueAtTime(1.0, now);
-          bellPanner.pan.linearRampToValueAtTime(-1.0, now + 0.4); 
-          bell.connect(bellGain);
-          bellGain.connect(bellPanner);
-          bellPanner.connect(audioCtx.destination);
-        } else {
-          bell.connect(bellGain);
-          bellGain.connect(audioCtx.destination);
-        }
-        
-        bell.start(now);
-        bell.stop(now + 0.85);
-      });
+    case 'add': // Enterキー押下時
+      synthClick(240, 0.40, 3.0, 0.12, false);
       break;
-
-    case 'check-done': 
-      playExplosiveClick(380, 0.4, 2.5, 0.06);
-      break;
-
-    case 'check-undone': 
-      playExplosiveClick(150, 0.38, 1.8, 0.08);
-      break;
-
     case 'delete': 
-      playExplosiveClick(130, 0.52, 4.2, 0.075, false, true);
+      synthClick(180, 0.35, 2.5, 0.06, false, true);
       break;
   }
 }
@@ -665,11 +628,13 @@ function renderItems() {
       + (item.checked ? ' done' : '');
     li.dataset.idx = idx;
 
+    // ハンドル
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.innerHTML = '<span></span><span></span><span></span>';
     li.appendChild(handle);
 
+    // チェックボックス
     if (item.type === 'task') {
       const cb = document.createElement('input');
       cb.type = 'checkbox'; cb.className = 'checkbox'; cb.checked = item.checked;
@@ -677,12 +642,12 @@ function renderItems() {
         page.items[idx].checked = cb.checked;
         savePage(todayKey, page);
         li.classList.toggle('done', cb.checked);
-        playRetroSound(cb.checked ? 'check-done' : 'check-undone', 'c');
         updateProgress();
       });
       li.appendChild(cb);
     }
 
+    // テキスト
     const span = document.createElement('div');
     span.className = 'item-text';
     span.contentEditable = 'true';
@@ -692,21 +657,15 @@ function renderItems() {
       page.items[idx].text = getRawText(span.textContent, item.type);
       savePage(todayKey, page);
     });
+    
     span.addEventListener('keydown', e => {
-      if (e.key === 'Backspace') {
-        // 🛠️ 修正: 文字数がすでに0かつ、上の行に戻る判定の時（これ以上消せない最初の行の時など）は音を鳴らさない
-        if (span.textContent.length > 0) {
-          playRetroSound('delete', 'Backspace');
-        }
-        
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault(); 
+        focusNewInput();
+      } else if (e.key === 'Backspace') {
         if (span.textContent === '') {
           e.preventDefault();
-          
-          // 一番最初の行かつ空なら、そもそも削除も移動もしないので音を完全ガード
-          if (idx > 0 || page.items.length > 1) {
-            playRetroSound('delete', 'Backspace'); // 上の行へマージ、または消滅する時の音
-          }
-          
+          playSurfaceSound('delete', 'Backspace');
           page.items.splice(idx, 1);
           savePage(todayKey, page);
           renderItems(); 
@@ -718,49 +677,71 @@ function renderItems() {
             r.selectNodeContents(t); r.collapse(false);
             s.removeAllRanges(); s.addRange(r);
           } else { focusNewInput(); }
-        }
-      } else if (e.key !== 'Enter' && !e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
-        if (e.key === ' ') {
-          playRetroSound('space', ' ');
         } else {
-          playRetroSound('type', e.key.toLowerCase());
+          playSurfaceSound('delete', 'Backspace');
         }
-      }
-
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault(); focusNewInput();
+      } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
+        if (e.key === ' ') {
+          playSurfaceSound('space', ' ');
+        } else {
+          playSurfaceSound('type', e.key);
+        }
       }
     });
     li.appendChild(span);
 
+    // 引き継ぎバッジ
     if (item.carriedFrom) {
       const b = document.createElement('span');
       b.className = 'carry-badge'; b.textContent = '引き継ぎ';
       li.appendChild(b);
     }
 
+    // ===== 🛠️ ドラッグ＆ドロップ並び替え実装箇所の修正 =====
     li.draggable = true;
+    
     li.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', idx);
+      // インデックス型を確実に文字列データとして格納
+      e.dataTransfer.setData('text/plain', String(idx));
       setTimeout(() => li.classList.add('dragging'), 0);
     });
+    
     li.addEventListener('dragend', () => {
       li.classList.remove('dragging');
       document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     });
+    
     li.addEventListener('dragover', e => {
-      e.preventDefault();
-      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-      li.classList.add('drag-over');
+      e.preventDefault(); // ドロップ許可に必須
+      e.dataTransfer.dropEffect = 'move';
+      if (!li.classList.contains('dragging')) {
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        li.classList.add('drag-over');
+      }
     });
+
+    li.addEventListener('dragleave', () => {
+      li.classList.remove('drag-over');
+    });
+    
     li.addEventListener('drop', e => {
       e.preventDefault();
-      const from = parseInt(e.dataTransfer.getData('text/plain'));
-      if (from === idx) return;
+      e.stopPropagation();
+      
+      const fromIndexStr = e.dataTransfer.getData('text/plain');
+      if (fromIndexStr === '') return;
+      
+      const from = parseInt(fromIndexStr, 10);
+      if (isNaN(from) || from === idx) return;
+      
+      // データ構造の並び替え処理
       const moved = page.items.splice(from, 1)[0];
       page.items.splice(idx, 0, moved);
-      savePage(todayKey, page); renderItems(); updateProgress();
+      
+      savePage(todayKey, page); 
+      renderItems(); 
+      updateProgress();
     });
 
     ul.appendChild(li);
@@ -777,31 +758,6 @@ function focusNewInput() {
 }
 
 newInput.addEventListener('keydown', e => {
-  if (e.key === 'Backspace') {
-    // 🛠️ 修正: 下部入力欄の中身が空（文字数0）のときは、長押しされても一切鳴らさない
-    if (newInput.value.length > 0) {
-      playRetroSound('delete', 'Backspace');
-    }
-    
-    if (newInput.value === '' && page.items.length > 0) {
-      e.preventDefault();
-      playRetroSound('delete', 'Backspace'); // 上の既存行へフォーカスを戻す瞬間の音
-      const els = document.querySelectorAll('.item-text');
-      if (els.length > 0) {
-        const last = els[els.length-1]; last.focus();
-        const r = document.createRange(); const s = window.getSelection();
-        r.selectNodeContents(last); r.collapse(false);
-        s.removeAllRanges(); s.addRange(r);
-      }
-    }
-  } else if (e.key !== 'Enter' && !e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
-    if (e.key === ' ') {
-      playRetroSound('space', ' ');
-    } else {
-      playRetroSound('type', e.key.toLowerCase());
-    }
-  }
-
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     const raw = newInput.value.trim();
@@ -810,7 +766,27 @@ newInput.addEventListener('keydown', e => {
     savePage(todayKey, page);
     newInput.value = '';
     renderItems();
-    playRetroSound('add', 'Enter'); 
+    playSurfaceSound('add', 'Enter');
+  } else if (e.key === 'Backspace') {
+    if (newInput.value === '' && page.items.length > 0) {
+      e.preventDefault();
+      playSurfaceSound('delete', 'Backspace');
+      const els = document.querySelectorAll('.item-text');
+      if (els.length > 0) {
+        const last = els[els.length-1]; last.focus();
+        const r = document.createRange(); const s = window.getSelection();
+        r.selectNodeContents(last); r.collapse(false);
+        s.removeAllRanges(); s.addRange(r);
+      }
+    } else {
+      playSurfaceSound('delete', 'Backspace');
+    }
+  } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
+    if (e.key === ' ') {
+      playSurfaceSound('space', ' ');
+    } else {
+      playSurfaceSound('type', e.key);
+    }
   }
 });
 
@@ -873,7 +849,7 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
     const all = loadAll();
     const json = JSON.stringify(all, null, 2);
     const today = getTodayKey().replace(/\./g, '');
-    downloadText('jot_3daudio_' + today + '.json', json, 'application/json');
+    downloadText('jot_backup_' + today + '.json', json, 'application/json');
     showToast('JSONをエクスポートしました');
   }, 300);
 });
@@ -928,13 +904,14 @@ document.getElementById('import-input').addEventListener('change', function() {
       renderItems();
       showToast('インポート完了 — ' + validKeys.length + ' 日分');
     } catch(err) {
-      showToast('読み込み失敗：正しいJSONファイルか確認してください');
+      showToast('読み込み失敗：正しいJotのJSONファイルか確認してください');
     }
     this.value = '';
   };
   reader.readAsText(file);
 });
 
+// ===== 0時リロード =====
 function scheduleNextDay() {
   const now = new Date();
   const next = new Date(now);
