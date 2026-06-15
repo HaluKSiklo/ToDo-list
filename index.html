@@ -390,7 +390,7 @@
       <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Enter</kbd> タスクを追加<br>
       <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Shift+Enter</kbd> 改行<br>
       <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">#</kbd> 見出し <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">-</kbd> メモ<br>
-      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Backspace</kbd> 空行で前を編集<br>
+      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Backspace</kbd> 前を編集・削除<br>
       <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Drag</kbd> 並び替え
     </div>
   </div>
@@ -432,7 +432,7 @@ function uid() { return Math.random().toString(36).slice(2,10); }
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function createHeavyNoise() {
-  const bufferSize = audioCtx.sampleRate * 0.3; // ノイズバッファを拡大して余韻を確保
+  const bufferSize = audioCtx.sampleRate * 0.35; // バッファを拡大してザラつきをより引きずる
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
@@ -451,94 +451,80 @@ function playRetroSound(type) {
   unlockAudio();
   const now = audioCtx.currentTime;
 
-  // 機械が激突する音（3つのオシレーターと多層遅延アタック）
-  function playExplosiveClick(basePitch, volume, noiseMix, duration, isSpace = false) {
-    // 狂気的なランダムゆらぎ（打つたびにピッチと音量が大きく崩れる）
-    const pitchJitter = (Math.random() * 2 - 1) * (isSpace ? 40 : 130);
-    const finalPitch = Math.max(30, basePitch + pitchJitter);
-    const dynamicVol = volume * (0.75 + Math.random() * 0.5);
+  function playExplosiveClick(basePitch, volume, noiseMix, duration, isSpace = false, isDelete = false) {
+    const pitchJitter = (Math.random() * 2 - 1) * (isSpace ? 40 : (isDelete ? 80 : 130));
+    const finalPitch = Math.max(25, basePitch + pitchJitter);
+    const dynamicVol = volume * (0.8 + Math.random() * 0.4);
 
-    // 物理アームが「接触」してから「底打ち」するまでの微細な時間差（ジッター遅延）
     const strikeDelay = Math.random() * 0.006; 
 
-    // レイヤー1: アーム突入時の強烈なアタック（鋸歯状波/三角波）
+    // レイヤー1: メイン打撃
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
-    osc1.type = isSpace ? 'sawtooth' : 'triangle';
+    osc1.type = (isSpace || isDelete) ? 'sawtooth' : 'triangle';
     osc1.frequency.setValueAtTime(finalPitch, now + strikeDelay);
-    osc1.frequency.exponentialRampToValueAtTime(finalPitch * 0.35, now + strikeDelay + duration);
+    osc1.frequency.exponentialRampToValueAtTime(finalPitch * 0.3, now + strikeDelay + duration);
     gain1.gain.setValueAtTime(dynamicVol, now + strikeDelay);
     gain1.gain.exponentialRampToValueAtTime(0.001, now + strikeDelay + duration);
 
-    // レイヤー2: 鉄のシャーシが共鳴する中高音（不完全な矩形波）
+    // レイヤー2: 鉄のシャーシ共鳴高音
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
     osc2.type = 'square';
-    osc2.frequency.setValueAtTime(finalPitch * 1.8, now);
-    osc2.frequency.exponentialRampToValueAtTime(finalPitch * 0.6, now + 0.015);
-    gain2.gain.setValueAtTime(dynamicVol * 0.6, now);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+    osc2.frequency.setValueAtTime(finalPitch * 1.9, now);
+    osc2.frequency.exponentialRampToValueAtTime(finalPitch * 0.5, now + 0.018);
+    gain2.gain.setValueAtTime(dynamicVol * 0.5, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
 
-    // レイヤー3: バネが跳ねる重低音（サイン波）
+    // レイヤー3: バネが引きずる大質量低音
     const osc3 = audioCtx.createOscillator();
     const gain3 = audioCtx.createGain();
     osc3.type = 'sine';
-    osc3.frequency.setValueAtTime(finalPitch * 0.5, now);
-    gain3.gain.setValueAtTime(dynamicVol * 0.8, now);
-    gain3.gain.exponentialRampToValueAtTime(0.001, now + (isSpace ? 0.09 : 0.05));
+    osc3.frequency.setValueAtTime(finalPitch * 0.45, now);
+    gain3.gain.setValueAtTime(dynamicVol * (isDelete ? 1.2 : 0.8), now); // 削除時はバネ戻りの重低音をブースト
+    gain3.gain.exponentialRampToValueAtTime(0.001, now + (isSpace ? 0.12 : (isDelete ? 0.09 : 0.05)));
 
-    // 金属の破裂摩擦音（ホワイトノイズにアタックと余韻を多重付与）
+    // 金属の破裂摩擦ノイズ
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
     noiseGain.gain.setValueAtTime(dynamicVol * noiseMix, now);
-    // 鋭い衝撃音
-    noiseGain.gain.exponentialRampToValueAtTime(dynamicVol * 0.1, now + 0.008);
-    // 金属が擦れるざらついた引きずり音
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.8);
+    noiseGain.gain.exponentialRampToValueAtTime(dynamicVol * 0.12, now + 0.01);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.9);
 
-    // 全システム結合
     osc1.connect(gain1); gain1.connect(audioCtx.destination);
     osc2.connect(gain2); gain2.connect(audioCtx.destination);
     osc3.connect(gain3); gain3.connect(audioCtx.destination);
     noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
 
-    // 一斉爆発
     osc1.start(now + strikeDelay); osc1.stop(now + strikeDelay + duration + 0.01);
     osc2.start(now); osc2.stop(now + 0.02);
-    osc3.start(now); osc3.stop(now + 0.1);
-    noise.start(now); noise.stop(now + duration + 0.01);
+    osc3.start(now); osc3.stop(now + 0.12);
+    noise.start(now); noise.stop(now + duration + 0.02);
   }
 
   switch (type) {
-    case 'type': // 通常文字：激しく激突する「ガシャパキッ！」
+    case 'type': 
       const randomBase = 320 + Math.random() * 160;
       playExplosiveClick(randomBase, 0.32, 3.8, 0.045);
       break;
 
-    case 'space': // スペースバー：底が抜けるような「ズゴォォン！！」
+    case 'space': 
       playExplosiveClick(75, 0.55, 2.8, 0.12, true);
       break;
 
-    case 'add': // 新規Enter改行：「ドガシャァン！！大爆音チィィィイイイーーーン！！」
-      // キャリッジが激突する衝撃（フレーム破壊級）
+    case 'add': 
       playExplosiveClick(60, 0.65, 4.5, 0.22, true);
-      
-      // 狂った4重金属ベル共鳴（ピッチをわざと不協和音に狂わせて強烈な存在感へ）
       const industrialBells = [875, 1290, 1780, 2240];
       industrialBells.forEach((freq, idx) => {
         const bell = audioCtx.createOscillator();
         const bellGain = audioCtx.createGain();
-        const bellJitter = (Math.random() * 2 - 1) * 20; // 毎回キーンという余韻の響きが変わる
-        
+        const bellJitter = (Math.random() * 2 - 1) * 20;
         bell.type = 'sine';
         bell.frequency.setValueAtTime(freq + bellJitter, now);
-        
-        // 初撃の音量をハネ上げて、強烈に引きずる
         const bVol = idx === 0 ? 0.32 : 0.09;
         bellGain.gain.setValueAtTime(bVol, now);
         bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
-        
         bell.connect(bellGain);
         bellGain.connect(audioCtx.destination);
         bell.start(now);
@@ -546,16 +532,16 @@ function playRetroSound(type) {
       });
       break;
 
-    case 'check-done': // チェックオン：重い鉄格子の鍵が閉まる「ガチャコン！」
+    case 'check-done': 
       playExplosiveClick(380, 0.38, 2.5, 0.06);
       break;
 
-    case 'check-undone': // チェックオフ：ロックがハズれる重い衝撃「バキッ！」
+    case 'check-undone': 
       playExplosiveClick(150, 0.35, 1.8, 0.08);
       break;
 
-    case 'delete': // 削除（Backspace）：レバーが強制復帰する「ガコォッ！」
-      playExplosiveClick(180, 0.36, 3.0, 0.055);
+    case 'delete': // 削除（Backspace）：レバーと重いバネがガチーンと引き戻される大質量衝撃音
+      playExplosiveClick(130, 0.48, 4.2, 0.075, false, true);
       break;
   }
 }
@@ -665,8 +651,24 @@ function renderItems() {
       savePage(todayKey, page);
     });
     span.addEventListener('keydown', e => {
-      // 限界アナログタイピング（制御キーは除外）
-      if (e.key !== 'Enter' && e.key !== 'Backspace' && !e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
+      // 💥 バックスペース検知の完全修正
+      if (e.key === 'Backspace') {
+        playRetroSound('delete');
+        if (span.textContent === '') {
+          e.preventDefault();
+          page.items.splice(idx, 1);
+          savePage(todayKey, page);
+          renderItems(); 
+          updateProgress();
+          const els = document.querySelectorAll('.item-text');
+          if (els.length > 0) {
+            const t = els[Math.max(0, idx-1)]; t.focus();
+            const r = document.createRange(); const s = window.getSelection();
+            r.selectNodeContents(t); r.collapse(false);
+            s.removeAllRanges(); s.addRange(r);
+          } else { focusNewInput(); }
+        }
+      } else if (e.key !== 'Enter' && !e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
         if (e.key === ' ') {
           playRetroSound('space');
         } else {
@@ -676,21 +678,6 @@ function renderItems() {
 
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault(); focusNewInput();
-      }
-      if (e.key === 'Backspace' && span.textContent === '') {
-        e.preventDefault();
-        page.items.splice(idx, 1);
-        savePage(todayKey, page);
-        renderItems(); 
-        playRetroSound('delete');
-        updateProgress();
-        const els = document.querySelectorAll('.item-text');
-        if (els.length > 0) {
-          const t = els[Math.max(0, idx-1)]; t.focus();
-          const r = document.createRange(); const s = window.getSelection();
-          r.selectNodeContents(t); r.collapse(false);
-          s.removeAllRanges(); s.addRange(r);
-        } else { focusNewInput(); }
       }
     });
     li.appendChild(span);
@@ -741,8 +728,20 @@ function focusNewInput() {
 }
 
 newInput.addEventListener('keydown', e => {
-  // 限界アナログタイピング（制御キーは除外）
-  if (e.key !== 'Enter' && e.key !== 'Backspace' && !e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
+  // 💥 バックスペース検知の完全修正
+  if (e.key === 'Backspace') {
+    playRetroSound('delete');
+    if (newInput.value === '' && page.items.length > 0) {
+      e.preventDefault();
+      const els = document.querySelectorAll('.item-text');
+      if (els.length > 0) {
+        const last = els[els.length-1]; last.focus();
+        const r = document.createRange(); const s = window.getSelection();
+        r.selectNodeContents(last); r.collapse(false);
+        s.removeAllRanges(); s.addRange(r);
+      }
+    }
+  } else if (e.key !== 'Enter' && !e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
     if (e.key === ' ') {
       playRetroSound('space');
     } else {
@@ -758,18 +757,7 @@ newInput.addEventListener('keydown', e => {
     savePage(todayKey, page);
     newInput.value = '';
     renderItems();
-    playRetroSound('add'); // スマッシュ改行＆大爆音ベル
-  }
-  if (e.key === 'Backspace' && newInput.value === '' && page.items.length > 0) {
-    e.preventDefault();
-    playRetroSound('delete');
-    const els = document.querySelectorAll('.item-text');
-    if (els.length > 0) {
-      const last = els[els.length-1]; last.focus();
-      const r = document.createRange(); const s = window.getSelection();
-      r.selectNodeContents(last); r.collapse(false);
-      s.removeAllRanges(); s.addRange(r);
-    }
+    playRetroSound('add'); 
   }
 });
 
