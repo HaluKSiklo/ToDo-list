@@ -428,7 +428,7 @@ function loadPage(key) { const a = loadAll(); return a[key] || { items: [] }; }
 function savePage(key, pg) { const a = loadAll(); a[key] = pg; saveAll(a); }
 function uid() { return Math.random().toString(36).slice(2,10); }
 
-// ===== 💥 3D立体音響・限界爆発アナログ音響エンジン 💥 =====
+// ===== 3D立体音響・限界爆発アナログ音響エンジン =====
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function createHeavyNoise() {
@@ -440,7 +440,6 @@ function createHeavyNoise() {
 }
 const noiseBuffer = createHeavyNoise();
 
-// キーボードの物理位置マッピング (-1.0: 左端, 0.0: 中央, 1.0: 右端)
 const keyPositionMap = {
   'q':-0.9, 'a':-0.85, 'z':-0.8, 'w':-0.7, 's':-0.65, 'x':-0.6,
   'e':-0.5, 'd':-0.45, 'c':-0.4, 'r':-0.3, 'f':-0.25, 'v':-0.2,
@@ -453,7 +452,7 @@ const keyPositionMap = {
 function getKeyPan(key) {
   if (!key) return 0;
   if (keyPositionMap[key] !== undefined) return keyPositionMap[key];
-  return (Math.random() * 2 - 1) * 0.2; // 不明なキーは中央付近に散らす
+  return (Math.random() * 2 - 1) * 0.2;
 }
 
 function unlockAudio() {
@@ -467,24 +466,19 @@ function playRetroSound(type, keyName = '') {
   unlockAudio();
   const now = audioCtx.currentTime;
 
-  // 1. 立体定位（PanNode）の生成
   const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
   const initialPan = (type === 'space') ? 0 : getKeyPan(keyName);
   if (panner) {
     panner.pan.setValueAtTime(initialPan, now);
   }
 
-  // 2. 音響フィルター（位置によってシャーシの共鳴を変化させる）
   const filter = audioCtx.createBiquadFilter();
   filter.type = 'lowpass';
-  // 端っこを叩くほどバネやフレームが共鳴して低音がこもり、中心ほどカチッとヌケが良い音になる計算
-  const edgeFactor = Math.abs(initialPan); // 0.0 ~ 1.0
+  const edgeFactor = Math.abs(initialPan);
   const cutoffFreq = 3500 - (edgeFactor * 1800) + (Math.random() * 400);
   filter.frequency.setValueAtTime(cutoffFreq, now);
-  filter.Q.setValueAtTime(1.5 + (edgeFactor * 3.5), now); // 端ほど不快に共鸣する
+  filter.Q.setValueAtTime(1.5 + (edgeFactor * 3.5), now);
 
-  // システムの結合先
-  const audioDestination = panner ? panner : filter;
   if (panner) {
     filter.connect(panner);
     panner.connect(audioCtx.destination);
@@ -495,12 +489,10 @@ function playRetroSound(type, keyName = '') {
   function playExplosiveClick(basePitch, volume, noiseMix, duration, isSpace = false, isDelete = false) {
     const pitchJitter = (Math.random() * 2 - 1) * (isSpace ? 40 : (isDelete ? 80 : 130));
     const finalPitch = Math.max(25, basePitch + pitchJitter);
-    // 端っこを叩くほどブレる
     const dynamicVol = volume * (0.8 + Math.random() * 0.4) * (1 + edgeFactor * 0.2);
 
     const strikeDelay = Math.random() * 0.006; 
 
-    // レイヤー1: アーム突入メイン衝撃波
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
     osc1.type = (isSpace || isDelete) ? 'sawtooth' : 'triangle';
@@ -509,7 +501,6 @@ function playRetroSound(type, keyName = '') {
     gain1.gain.setValueAtTime(dynamicVol, now + strikeDelay);
     gain1.gain.exponentialRampToValueAtTime(0.001, now + strikeDelay + duration);
 
-    // レイヤー2: 鉄シャーシの金属高周波
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
     osc2.type = 'square';
@@ -518,7 +509,6 @@ function playRetroSound(type, keyName = '') {
     gain2.gain.setValueAtTime(dynamicVol * 0.5, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
 
-    // レイヤー3: 大質量フレーム・スプリング重低音
     const osc3 = audioCtx.createOscillator();
     const gain3 = audioCtx.createGain();
     osc3.type = 'sine';
@@ -526,11 +516,9 @@ function playRetroSound(type, keyName = '') {
     gain3.gain.setValueAtTime(dynamicVol * (isDelete ? 1.3 : 0.8), now);
     gain3.gain.exponentialRampToValueAtTime(0.001, now + (isSpace ? 0.14 : (isDelete ? 0.1 : 0.05)));
 
-    // 破裂引きずりホワイトノイズ
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
-    // 端を叩くほど内部パーツのガタつきノイズが増える
     noiseGain.gain.setValueAtTime(dynamicVol * (noiseMix + edgeFactor * 1.5), now);
     noiseGain.gain.exponentialRampToValueAtTime(dynamicVol * 0.12, now + 0.01);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.9);
@@ -556,7 +544,7 @@ function playRetroSound(type, keyName = '') {
       playExplosiveClick(75, 0.6, 2.8, 0.12, true);
       break;
 
-    case 'add': // Enter改行：右端から左端へ「チィィィーン」と音が高速移動する（立体スイープエフェクト）
+    case 'add': 
       playExplosiveClick(55, 0.7, 4.8, 0.25, true);
       
       const industrialBells = [875, 1290, 1780, 2240];
@@ -573,10 +561,9 @@ function playRetroSound(type, keyName = '') {
         bellGain.gain.setValueAtTime(bVol, now);
         bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
         
-        // 💥 超立体：右端(1.0)から左端(-1.0)へキャリッジが滑走する音像移動の計算
         if (bellPanner) {
           bellPanner.pan.setValueAtTime(1.0, now);
-          bellPanner.pan.linearRampToValueAtTime(-1.0, now + 0.4); // 0.4秒で左へぶっ飛ぶ
+          bellPanner.pan.linearRampToValueAtTime(-1.0, now + 0.4); 
           bell.connect(bellGain);
           bellGain.connect(bellPanner);
           bellPanner.connect(audioCtx.destination);
@@ -707,9 +694,19 @@ function renderItems() {
     });
     span.addEventListener('keydown', e => {
       if (e.key === 'Backspace') {
-        playRetroSound('delete', 'Backspace');
+        // 🛠️ 修正: 文字数がすでに0かつ、上の行に戻る判定の時（これ以上消せない最初の行の時など）は音を鳴らさない
+        if (span.textContent.length > 0) {
+          playRetroSound('delete', 'Backspace');
+        }
+        
         if (span.textContent === '') {
           e.preventDefault();
+          
+          // 一番最初の行かつ空なら、そもそも削除も移動もしないので音を完全ガード
+          if (idx > 0 || page.items.length > 1) {
+            playRetroSound('delete', 'Backspace'); // 上の行へマージ、または消滅する時の音
+          }
+          
           page.items.splice(idx, 1);
           savePage(todayKey, page);
           renderItems(); 
@@ -781,9 +778,14 @@ function focusNewInput() {
 
 newInput.addEventListener('keydown', e => {
   if (e.key === 'Backspace') {
-    playRetroSound('delete', 'Backspace');
+    // 🛠️ 修正: 下部入力欄の中身が空（文字数0）のときは、長押しされても一切鳴らさない
+    if (newInput.value.length > 0) {
+      playRetroSound('delete', 'Backspace');
+    }
+    
     if (newInput.value === '' && page.items.length > 0) {
       e.preventDefault();
+      playRetroSound('delete', 'Backspace'); // 上の既存行へフォーカスを戻す瞬間の音
       const els = document.querySelectorAll('.item-text');
       if (els.length > 0) {
         const last = els[els.length-1]; last.focus();
