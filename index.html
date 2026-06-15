@@ -24,16 +24,35 @@
     --carry-text: #9B9B96;
     --max-w: 680px;
     --bar-h: 2px;
+    --bg-main: #ffffff;
+    --kbd-bg: #F0EFE9;
+  }
+
+  /* オート・ダークモード */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --line-color: #2C2C2A;
+      --text-main: #E3E3E1;
+      --text-sub: #70706B;
+      --text-heading: #A1A19B;
+      --check-border: #4A4A47;
+      --check-done: #5A5A56;
+      --carry-bg: #222220;
+      --carry-text: #70706B;
+      --bg-main: #141413;
+      --kbd-bg: #2C2C2A;
+    }
   }
 
   html, body {
     height: 100%;
-    background: #fff;
+    background: var(--bg-main);
     color: var(--text-main);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 15px;
     line-height: var(--line-h);
     -webkit-font-smoothing: antialiased;
+    transition: background 0.3s, color 0.3s;
   }
 
   /* ===== 進捗バー ===== */
@@ -87,16 +106,62 @@
     position: relative;
   }
 
+  /* ===== 日付 ＆ カレンダーナビ ===== */
+  #date-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--line-h);
+    user-select: none;
+    z-index: 10;
+  }
   #date-label {
     font-size: 12px;
     letter-spacing: 0.1em;
     color: var(--text-sub);
     font-weight: 400;
-    height: var(--line-h);
-    display: flex;
-    align-items: center;
-    user-select: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
   }
+  #date-label:hover {
+    background: var(--carry-bg);
+    color: var(--text-main);
+  }
+  
+  .date-nav-btn {
+    background: none; border: none; color: var(--text-sub);
+    font-size: 10px; cursor: pointer; padding: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s;
+  }
+  .date-nav-btn:hover { color: var(--text-main); }
+
+  /* カレンダードロップダウン */
+  #calendar-picker {
+    position: absolute; top: 36px; left: 0;
+    background: var(--bg-main);
+    border: 1px solid var(--line-color);
+    border-radius: 6px; padding: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    display: none; width: 220px; z-index: 50;
+  }
+  #calendar-picker.open { display: block; }
+  .cal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 500; color: var(--text-heading); margin-bottom: 8px;
+  }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 10px; }
+  .cal-day-label { color: var(--text-sub); font-weight: 500; padding-bottom: 4px; }
+  .cal-cell {
+    padding: 4px 0; border-radius: 4px; cursor: pointer; color: var(--text-main);
+    transition: background 0.15s;
+  }
+  .cal-cell:hover { background: var(--line-color); }
+  .cal-cell.has-data { font-weight: 500; text-decoration: underline; text-decoration-color: var(--text-sub); }
+  .cal-cell.current { background: var(--text-main); color: var(--bg-main); font-weight: 500; }
 
   /* ===== アイテムリスト ===== */
   #items { list-style: none; }
@@ -109,10 +174,10 @@
     gap: 10px;
     transition: opacity 0.15s, background-color 0.15s;
   }
-  
-  .item.dragging { opacity: 0.3; background-color: #fafafa; }
+  .item.dragging { opacity: 0.3; background-color: var(--carry-bg); }
   .item.drag-over { border-top: 2px solid var(--text-main); }
 
+  /* ドラッグハンドル */
   .drag-handle {
     position: absolute;
     left: -24px;
@@ -129,6 +194,7 @@
     gap: 2.5px;
     padding: 2px;
     z-index: 10;
+    touch-action: none; /* スマホドラッグ用のフリックスクロール干渉防止 */
   }
   .drag-handle:active { cursor: grabbing; }
   .drag-handle span { display: block; width: 10px; height: 1px; background: var(--check-border); }
@@ -147,7 +213,7 @@
     appearance: none;
     -webkit-appearance: none;
   }
-  .checkbox:hover { border-color: #8E8E89; }
+  .checkbox:hover { border-color: var(--text-heading); }
   .checkbox:checked { border-color: var(--check-done); }
   .checkbox:checked::after {
     content: '';
@@ -183,9 +249,10 @@
   .item.done .item-text {
     color: var(--check-done);
     text-decoration: line-through;
-    text-decoration-color: #CBCBC6;
+    text-decoration-color: var(--check-done);
   }
 
+  /* 見出し */
   .item.type-heading .item-text {
     font-size: 11px; font-weight: 500;
     letter-spacing: 0.1em; text-transform: uppercase;
@@ -193,6 +260,7 @@
   }
   .item.type-heading .checkbox { display: none; }
 
+  /* メモ */
   .item.type-memo .item-text {
     font-size: 13px; color: var(--text-sub);
     padding-left: 18px;
@@ -206,6 +274,7 @@
     background: var(--check-border);
   }
 
+  /* 引き継ぎバッジ */
   .carry-badge {
     flex-shrink: 0;
     font-size: 10px; letter-spacing: 0.04em;
@@ -232,7 +301,7 @@
     pointer-events: none;
   }
 
-  /* ===== トップバー＆メニュー ===== */
+  /* ===== ブランド + メニューボタン ===== */
   #topbar {
     position: fixed;
     top: 16px; right: 24px;
@@ -254,11 +323,12 @@
   #menu-btn:hover { opacity: 0.7; }
   #menu-btn span { display: block; width: 14px; height: 1px; background: var(--text-main); }
 
+  /* ===== ドロワーメニュー ===== */
   #drawer {
     position: fixed;
     top: 0; right: 0; bottom: 0;
     width: 260px;
-    background: #fff;
+    background: var(--bg-main);
     border-left: 0.5px solid var(--line-color);
     z-index: 300;
     transform: translateX(100%);
@@ -311,6 +381,7 @@
 
   #import-input { display: none; }
 
+  /* ===== ヒント ===== */
   #hint {
     position: fixed; bottom: 24px; right: 28px;
     font-size: 11px; color: var(--text-sub);
@@ -321,20 +392,32 @@
   #hint.visible { opacity: 1; }
   #hint kbd {
     font-family: inherit; font-size: 10px;
-    background: #F0EFE9; border-radius: 3px;
+    background: var(--kbd-bg); border-radius: 3px;
     padding: 1px 5px; color: var(--text-heading);
   }
 
+  /* ===== トースト（Undo元に戻す機能付き） ===== */
   #toast {
     position: fixed; bottom: 28px; left: 50%;
     transform: translateX(-50%) translateY(8px);
-    background: var(--text-main); color: #fff;
+    background: var(--text-main); color: var(--bg-main);
     font-size: 12px; letter-spacing: 0.03em;
-    padding: 7px 16px; border-radius: 20px;
+    padding: 8px 18px; border-radius: 20px;
     opacity: 0; transition: opacity 0.2s, transform 0.2s;
-    pointer-events: none; white-space: nowrap;
+    z-index: 500; white-space: nowrap;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast-undo-btn {
+    background: none; border: none; color: var(--text-sub); font-family: inherit;
+    font-size: 11px; font-weight: 500; cursor: pointer; text-decoration: underline; padding: 2px 4px;
+  }
+  #toast-undo-btn:hover { color: var(--text-main); }
+  /* トースト用のダークテーマ補正 */
+  @media (prefers-color-scheme: dark) {
+    #toast-undo-btn:hover { color: var(--bg-main); }
+  }
 
   @media (max-width: 600px) {
     :root { --page-l: 40px; --page-r: 24px; --page-t: 44px; }
@@ -355,6 +438,7 @@
   </button>
 </div>
 
+<!-- ドロワー -->
 <div id="drawer-overlay"></div>
 <div id="drawer" role="dialog" aria-label="メニュー">
   <button id="drawer-close" aria-label="閉じる">✕</button>
@@ -379,17 +463,32 @@
   <div class="drawer-section">
     <div class="drawer-label">ショートカット</div>
     <div style="font-size:12px; color:var(--text-sub); line-height:2;">
-      <kbd>Enter</kbd> タスクを追加<br>
-      <kbd>Shift+Enter</kbd> 改行<br>
-      <kbd>#</kbd> 見出し <kbd>-</kbd> メモ<br>
-      <kbd>Backspace</kbd> 空行で前を編集<br>
-      <kbd>Drag</kbd> 並び替え
+      <kbd>Enter</kbd> タスクを追加 / 下の行へ<br>
+      <kbd>↑</kbd> <kbd>↓</kbd> 行間のフォーカス移動<br>
+      <kbd>Ctrl+Shift+↑</kbd> <kbd>↓</kbd> 行の並び替え<br>
+      <kbd>Ctrl+E</kbd> タスクの完了切り替え<br>
+      <kbd>Ctrl+Z</kbd> 削除を元に戻す<br>
+      <kbd>#</kbd> 見出し / <kbd>-</kbd> メモ (先頭入力)
     </div>
   </div>
 </div>
 
 <div id="page">
-  <div id="date-label"></div>
+  <div id="date-container">
+    <button class="date-nav-btn" id="btn-prev-day">◀</button>
+    <div id="date-label"></div>
+    <button class="date-nav-btn" id="btn-next-day">▶</button>
+    <!-- カレンダーポップアップ -->
+    <div id="calendar-picker">
+      <div class="cal-header">
+        <button id="cal-prev-month" style="background:none;border:none;cursor:pointer;color:inherit;">◀</button>
+        <span id="cal-month-title"></span>
+        <button id="cal-next-month" style="background:none;border:none;cursor:pointer;color:inherit;">▶</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+
   <ul id="items"></ul>
   <div id="new-input">
     <div class="input-checkbox-ghost"></div>
@@ -398,29 +497,31 @@
 </div>
 
 <div id="hint">
-  <kbd>#</kbd> 見出し &nbsp; <kbd>-</kbd> メモ<br>
-  <kbd>Shift+Enter</kbd> 改行 &nbsp; <kbd>Drag</kbd> 並び替え
+  <kbd>#</kbd> 見出し &nbsp; <kbd>-</kbd> メモ &nbsp; <kbd>↑↓</kbd> 移動 &nbsp; <kbd>Ctrl+Z</kbd> Undo
 </div>
-<div id="toast"></div>
+<div id="toast">
+  <span id="toast-text"></span>
+  <button id="toast-undo-btn">元に戻す</button>
+</div>
 
 <script>
-// ===== ストレージロジック =====
+// ===== ストレージ =====
 const DB_KEY = 'jot_pages';
+let currentKey = getTodayKey();
+let page = { items: [] };
+let lastDeletedItem = null; // Undo一時バッファ
 
-function getTodayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+function formatDateKey(date) {
+  return `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}`;
 }
-
-function loadAll() {
-  try { return JSON.parse(localStorage.getItem(DB_KEY) || '{}'); } catch { return {}; }
-}
+function getTodayKey() { return formatDateKey(new Date()); }
+function loadAll() { try { return JSON.parse(localStorage.getItem(DB_KEY) || '{}'); } catch { return {}; } }
 function saveAll(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
 function loadPage(key) { const a = loadAll(); return a[key] || { items: [] }; }
 function savePage(key, pg) { const a = loadAll(); a[key] = pg; saveAll(a); }
 function uid() { return Math.random().toString(36).slice(2,10); }
 
-// ===== 🎹 クラシック・タイプライター音響合成エンジン =====
+// ===== 💻 3D立体音響・クラシックタイプライター合成エンジン =====
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function createHeavyNoise() {
@@ -432,8 +533,8 @@ function createHeavyNoise() {
 }
 const noiseBuffer = createHeavyNoise();
 
-// 打鍵位置（ステレオ・パンニング）マッピング
-const keyPanMap = {
+// Surface配列実測によるステレオパンニングマップ (-1.0:左, 1.0:右)
+const surfaceKeyPanMap = {
   '1':-0.84, '2':-0.71, '3':-0.58, '4':-0.45, '5':-0.32, '6':-0.19, '7':-0.06, '8':0.07, '9':0.20, '0':0.33, '-':0.46, '^':0.59, '¥':0.72, 'Backspace':0.90,
   'q':-0.80, 'w':-0.67, 'e':-0.54, 'r':-0.41, 't':-0.28, 'y':-0.15, 'u':-0.02, 'i':0.11, 'o':0.24, 'p':0.37, '@':0.50, '[':0.63, 'Enter':0.88,
   'a':-0.76, 's':-0.63, 'd':-0.50, 'f':-0.37, 'g':-0.24, 'h':-0.11, 'j':0.02, 'k':0.15, 'l':0.28, ';':0.41, ':':0.54, ']':0.67,
@@ -443,10 +544,10 @@ const keyPanMap = {
 
 function getKeyPan(key) {
   if (!key) return 0;
-  if (keyPanMap[key] !== undefined) return keyPanMap[key];
+  if (surfaceKeyPanMap[key] !== undefined) return surfaceKeyPanMap[key];
   const upper = key.toUpperCase();
-  if (keyPanMap[upper] !== undefined) return keyPanMap[upper];
-  return (Math.random() * 2 - 1) * 0.2;
+  if (surfaceKeyPanMap[upper] !== undefined) return surfaceKeyPanMap[upper];
+  return (Math.random() * 2 - 1) * 0.15;
 }
 
 function unlockAudio() {
@@ -478,7 +579,7 @@ function playJotSound(type, keyName = '') {
     const freq = baseFreq + jitter;
     const dynVol = volume * (0.8 + Math.random() * 0.4);
 
-    // 1. 金属アームが紙を叩く破裂アタック音
+    // 1. レバー打撃インパクト (強いアタック)
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
     osc1.type = 'triangle';
@@ -487,7 +588,7 @@ function playJotSound(type, keyName = '') {
     gain1.gain.setValueAtTime(dynVol, now);
     gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
 
-    // 2. 内部レバーの金属反響
+    // 2. 内部シャーシ反響音
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
     osc2.type = 'square';
@@ -495,7 +596,7 @@ function playJotSound(type, keyName = '') {
     gain2.gain.setValueAtTime(dynVol * 0.4, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    // 3. インパクト瞬間の摩擦ホワイトノイズ
+    // 3. インプット面摩擦紙こすれ音
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
@@ -512,17 +613,18 @@ function playJotSound(type, keyName = '') {
   }
 
   switch (type) {
-    case 'type': // パチン！と弾ける印字音
+    case 'type': 
       synthMechanicalClick(320, 0.45, 3.8, 0.06);
       break;
-    case 'space': // トンッ！と重く響くスペースバー
+    case 'space': 
       synthMechanicalClick(180, 0.55, 2.5, 0.10);
       break;
-    case 'add': // チンッ！ガラガラ…（改行時のベルと台座の移動音）
+    case 'add': 
+      // 改行「チンッ！」の独立ベル
       const bellOsc = audioCtx.createOscillator();
       const bellGain = audioCtx.createGain();
       bellOsc.type = 'sine';
-      bellOsc.frequency.setValueAtTime(2100, now);
+      bellOsc.frequency.setValueAtTime(2100, now); 
       bellGain.gain.setValueAtTime(0.35, now);
       bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
       bellOsc.connect(bellGain); bellGain.connect(audioCtx.destination);
@@ -530,16 +632,16 @@ function playJotSound(type, keyName = '') {
 
       synthMechanicalClick(140, 0.60, 4.5, 0.18);
       break;
-    case 'delete': // ガチャッ（重い逆行音）
+    case 'delete': 
       synthMechanicalClick(220, 0.40, 3.0, 0.08);
       break;
-    case 'check': // カチリッ（完了チェックボックス専用：マイクロスイッチ音）
+    case 'check': 
       synthMechanicalClick(480, 0.42, 1.5, 0.05);
       break;
   }
 }
 
-// ===== 引き継ぎロジック =====
+// ===== 引き継ぎ =====
 function maybeCarryOver(todayKey) {
   const all = loadAll();
   const keys = Object.keys(all).sort();
@@ -557,7 +659,7 @@ function maybeCarryOver(todayKey) {
   savePage(todayKey, today);
 }
 
-// ===== UI・進捗管理 =====
+// ===== 進捗バー =====
 function updateProgress() {
   const tasks = page.items.filter(it => it.type === 'task');
   const done  = tasks.filter(it => it.checked).length;
@@ -579,7 +681,7 @@ function updateProgress() {
   label._timer = setTimeout(() => label.classList.remove('visible'), 2400);
 }
 
-// ===== ノート変換パーサー =====
+// ===== 記法変換パーサー =====
 function getItemType(text) {
   if (text.startsWith('# ') || text === '#') return 'heading';
   if (text.startsWith('- ') || text === '-') return 'memo';
@@ -596,13 +698,44 @@ function getRawText(display, type) {
   return display;
 }
 
-// ===== アプリケーション初期化 =====
-const todayKey = getTodayKey();
-document.getElementById('date-label').textContent = todayKey;
-maybeCarryOver(todayKey);
-let page = loadPage(todayKey);
+// ===== 画面切り替え（過去ログ・カレンダー連動） =====
+function switchDay(key) {
+  currentKey = key;
+  document.getElementById('date-label').textContent = currentKey;
+  page = loadPage(currentKey);
+  renderItems();
+  closeCalendar();
+}
 
-// ===== アイテムの描画とイベント管理 =====
+// ===== 削除 ＆ Undo システム =====
+function deleteItem(idx) {
+  lastDeletedItem = { index: idx, data: page.items[idx] };
+  page.items.splice(idx, 1);
+  savePage(currentKey, page);
+  renderItems();
+  playJotSound('delete', 'Backspace');
+  showToast('項目を削除しました', true);
+  
+  const els = document.querySelectorAll('.item-text');
+  if (els.length > 0) {
+    const t = els[Math.max(0, idx - 1)]; t.focus();
+    window.getSelection().selectAllChildren(t); window.getSelection().collapseToEnd();
+  } else { focusNewInput(); }
+}
+
+function triggerUndo() {
+  if (!lastDeletedItem) return;
+  page.items.splice(lastDeletedItem.index, 0, lastDeletedItem.data);
+  savePage(currentKey, page);
+  renderItems();
+  playJotSound('delete', 'Backspace');
+  const els = document.querySelectorAll('.item-text');
+  if (els[lastDeletedItem.index]) els[lastDeletedItem.index].focus();
+  lastDeletedItem = null;
+  hideToast();
+}
+
+// ===== レンダリング (ドラッグ＆ショートカット完全統合) =====
 function renderItems() {
   const ul = document.getElementById('items');
   ul.innerHTML = '';
@@ -613,7 +746,7 @@ function renderItems() {
       + (item.checked ? ' done' : '');
     li.dataset.idx = idx;
 
-    // 並び替え用ハンドル
+    // スマホ・デスクトップ並び替えハンドル
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.innerHTML = '<span></span><span></span><span></span>';
@@ -624,51 +757,94 @@ function renderItems() {
       const cb = document.createElement('input');
       cb.type = 'checkbox'; cb.className = 'checkbox'; cb.checked = item.checked;
       cb.addEventListener('change', () => {
-        playJotSound('check'); // 専用のラッチスイッチ音を再生
+        playJotSound('check');
         page.items[idx].checked = cb.checked;
-        savePage(todayKey, page);
+        savePage(currentKey, page);
         li.classList.toggle('done', cb.checked);
         updateProgress();
       });
       li.appendChild(cb);
     }
 
-    // 各インラインテキスト入力欄
+    // テキスト編集領域
     const span = document.createElement('div');
     span.className = 'item-text';
     span.contentEditable = 'true';
     span.spellcheck = false;
     span.textContent = getDisplayText(item.text, item.type);
+
+    // 既存行への「マークダウン風切り替え」動的対応
     span.addEventListener('input', () => {
-      page.items[idx].text = getRawText(span.textContent, item.type);
-      savePage(todayKey, page);
+      let currentText = span.textContent;
+      let newType = item.type;
+      if (currentText.startsWith('# ')) { newType = 'heading'; }
+      else if (currentText.startsWith('- ')) { newType = 'memo'; }
+      else if (item.type !== 'task' && !currentText.startsWith('# ') && !currentText.startsWith('- ')) { newType = 'task'; }
+
+      page.items[idx].type = newType;
+      page.items[idx].text = getRawText(currentText, newType);
+      savePage(currentKey, page);
+
+      li.className = 'item' + (newType === 'heading' ? ' type-heading' : newType === 'memo' ? ' type-memo' : '') + (item.checked ? ' done' : '');
+      const hasCb = li.querySelector('.checkbox');
+      if (newType === 'task' && !hasCb) { renderItems(); span.focus(); }
+      else if (newType !== 'task' && hasCb) { hasCb.remove(); }
+      updateProgress();
     });
     
     span.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault(); 
-        focusNewInput();
-      } else if (e.key === 'Backspace') {
-        if (span.textContent === '') {
+      const els = document.querySelectorAll('.item-text');
+
+      // Backspace押し続けの文字消滅後無駄鳴りガード
+      if (e.key === 'Backspace') {
+        if (span.textContent.length > 0) {
+          playJotSound('delete', 'Backspace');
+        } else if (span.textContent === '') {
           e.preventDefault();
-          playJotSound('delete', 'Backspace');
-          page.items.splice(idx, 1);
-          savePage(todayKey, page);
-          renderItems(); 
-          updateProgress();
-          const els = document.querySelectorAll('.item-text');
-          if (els.length > 0) {
-            const t = els[Math.max(0, idx-1)]; t.focus();
-            const r = document.createRange(); const s = window.getSelection();
-            r.selectNodeContents(t); r.collapse(false);
-            s.removeAllRanges(); s.addRange(r);
-          } else { focusNewInput(); }
-        } else {
-          playJotSound('delete', 'Backspace');
+          deleteItem(idx);
         }
-      } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
+      } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey && e.key !== 'Enter') {
         if (e.key === ' ') { playJotSound('space', ' '); }
         else { playJotSound('type', e.key); }
+      }
+
+      // Enterで次の行へ（無ければ新規入力）
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (idx + 1 < els.length) { els[idx+1].focus(); } else { focusNewInput(); }
+      }
+
+      // 上下矢印キーのフォーカス移動
+      if (e.key === 'ArrowDown' && !e.shiftKey && !e.ctrlKey) {
+        e.preventDefault();
+        if (idx + 1 < els.length) els[idx+1].focus(); else focusNewInput();
+      }
+      if (e.key === 'ArrowUp' && !e.shiftKey && !e.ctrlKey) {
+        e.preventDefault();
+        if (idx - 1 >= 0) els[idx-1].focus();
+      }
+
+      // Ctrl + Shift + ↑/↓ で行を並び替え
+      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.shiftKey && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        const targetIdx = e.key === 'ArrowDown' ? idx + 1 : idx - 1;
+        if (targetIdx >= 0 && targetIdx < page.items.length) {
+          const moved = page.items.splice(idx, 1)[0];
+          page.items.splice(targetIdx, 0, moved);
+          savePage(currentKey, page); renderItems();
+          document.querySelectorAll('.item-text')[targetIdx].focus();
+        }
+      }
+
+      // Ctrl + E でタスク完了をトグル
+      if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (item.type === 'task') {
+          item.checked = !item.checked;
+          savePage(currentKey, page); renderItems();
+          playJotSound('check');
+          document.querySelectorAll('.item-text')[idx].focus();
+        }
       }
     });
     li.appendChild(span);
@@ -680,7 +856,7 @@ function renderItems() {
       li.appendChild(b);
     }
 
-    // ドラッグ＆ドロップ機能
+    // デスクトップドラッグ
     li.draggable = true;
     li.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
@@ -708,9 +884,37 @@ function renderItems() {
       if (isNaN(from) || from === idx) return;
       const moved = page.items.splice(from, 1)[0];
       page.items.splice(idx, 0, moved);
-      savePage(todayKey, page); 
-      renderItems(); 
-      updateProgress();
+      savePage(currentKey, page); renderItems(); updateProgress();
+    });
+
+    // モバイルタッチドラッグ（スマホ最適化）
+    let touchStartY = 0;
+    handle.addEventListener('touchstart', e => {
+      touchStartY = e.touches[0].clientY;
+      li.classList.add('dragging');
+    }, {passive: true});
+
+    handle.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const touchY = e.touches[0].clientY;
+      const targetEl = document.elementFromPoint(e.touches[0].clientX, touchY);
+      const closestLi = targetEl ? targetEl.closest('.item') : null;
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      if (closestLi && closestLi !== li) { closestLi.classList.add('drag-over'); }
+    }, {passive: false});
+
+    handle.addEventListener('touchend', e => {
+      li.classList.remove('dragging');
+      const endY = e.changedTouches[0].clientY;
+      const targetEl = document.elementFromPoint(e.changedTouches[0].clientX, endY);
+      const closestLi = targetEl ? targetEl.closest('.item') : null;
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      if (closestLi && closestLi !== li) {
+        const toIdx = parseInt(closestLi.dataset.idx);
+        const moved = page.items.splice(idx, 1)[0];
+        page.items.splice(toIdx, 0, moved);
+        savePage(currentKey, page); renderItems(); updateProgress();
+      }
     });
 
     ul.appendChild(li);
@@ -718,7 +922,7 @@ function renderItems() {
   updateProgress();
 }
 
-// ===== ボトム新規入力行 =====
+// ===== 下部新規入力欄 =====
 const newInput = document.getElementById('new-input-field');
 
 function focusNewInput() {
@@ -727,17 +931,10 @@ function focusNewInput() {
 }
 
 newInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    const raw = newInput.value.trim();
-    if (!raw) return;
-    page.items.push({ id: uid(), type: getItemType(raw), text: raw, checked: false });
-    savePage(todayKey, page);
-    newInput.value = '';
-    renderItems();
-    playJotSound('add', 'Enter'); // 改行ベルシステムを鳴らす
-  } else if (e.key === 'Backspace') {
-    if (newInput.value === '' && page.items.length > 0) {
+  if (e.key === 'Backspace') {
+    if (newInput.value.length > 0) {
+      playJotSound('delete', 'Backspace');
+    } else if (newInput.value === '' && page.items.length > 0) {
       e.preventDefault();
       playJotSound('delete', 'Backspace');
       const els = document.querySelectorAll('.item-text');
@@ -747,12 +944,35 @@ newInput.addEventListener('keydown', e => {
         r.selectNodeContents(last); r.collapse(false);
         s.removeAllRanges(); s.addRange(r);
       }
-    } else {
-      playJotSound('delete', 'Backspace');
     }
-  } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
+  } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey && e.key !== 'Enter') {
     if (e.key === ' ') { playJotSound('space', ' '); }
     else { playJotSound('type', e.key); }
+  }
+
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const raw = newInput.value.trim();
+    if (!raw) return;
+    page.items.push({ id: uid(), type: getItemType(raw), text: raw, checked: false });
+    savePage(currentKey, page);
+    newInput.value = '';
+    renderItems();
+    playJotSound('add', 'Enter');
+  }
+
+  if (e.key === 'ArrowUp' && newInput.value === '') {
+    const els = document.querySelectorAll('.item-text');
+    if (els.length > 0) els[els.length-1].focus();
+  }
+});
+
+// 全体的なキーボードショートカット (Ctrl+Z でUndo)
+window.addEventListener('keydown', e => {
+  if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+    if (document.activeElement.id !== 'new-input-field' && document.activeElement.tagName !== 'INPUT') {
+      if (lastDeletedItem) { e.preventDefault(); triggerUndo(); }
+    }
   }
 });
 
@@ -773,15 +993,68 @@ document.getElementById('page').addEventListener('click', e => {
   }
 });
 
-// ===== 通知（トースト） =====
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+// ===== カレンダー実装 =====
+let calDate = new Date();
+const dateLabel = document.getElementById('date-label');
+const picker = document.getElementById('calendar-picker');
+
+function openCalendar() { picker.classList.add('open'); renderCalendar(); }
+function closeCalendar() { picker.classList.remove('open'); }
+
+dateLabel.addEventListener('click', e => { e.stopPropagation(); picker.classList.contains('open') ? closeCalendar() : openCalendar(); });
+document.addEventListener('click', e => { if (!picker.contains(e.target) && e.target !== dateLabel) closeCalendar(); });
+
+document.getElementById('cal-prev-month').addEventListener('click', e => { e.stopPropagation(); calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); });
+document.getElementById('cal-next-month').addEventListener('click', e => { e.stopPropagation(); calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); });
+document.getElementById('btn-prev-day').addEventListener('click', () => { moveDay(-1); });
+document.getElementById('btn-next-day').addEventListener('click', () => { moveDay(1); });
+
+function moveDay(offset) {
+  const parts = currentKey.split('.');
+  const d = new Date(parts[0], parts[1]-1, parts[2]);
+  d.setDate(d.getDate() + offset);
+  switchDay(formatDateKey(d));
 }
 
-// ===== ドロワーコントロール =====
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  const title = document.getElementById('cal-month-title');
+  grid.innerHTML = '';
+  
+  title.textContent = `${calDate.getFullYear()}年 ${calDate.getMonth() + 1}月`;
+  const labels = ['日','月','火','水','木','金','土'];
+  labels.forEach(l => { const div = document.createElement('div'); div.className = 'cal-day-label'; div.textContent = l; grid.appendChild(div); });
+
+  const firstDay = new Date(calDate.getFullYear(), calDate.getMonth(), 1).getDay();
+  const numDays = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0).getDate();
+  const allData = loadAll();
+
+  for(let i=0; i<firstDay; i++) { grid.appendChild(document.createElement('div')); }
+  for(let day=1; day<=numDays; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell'; cell.textContent = day;
+    const thisKey = `${calDate.getFullYear()}.${String(calDate.getMonth()+1).padStart(2,'0')}.${String(day).padStart(2,'0')}`;
+    
+    if (allData[thisKey] && allData[thisKey].items && allData[thisKey].items.length > 0) cell.classList.add('has-data');
+    if (thisKey === currentKey) cell.classList.add('current');
+    
+    cell.addEventListener('click', e => { e.stopPropagation(); switchDay(thisKey); });
+    grid.appendChild(cell);
+  }
+}
+
+// ===== トースト表示 ＆ Undoトリガー =====
+function showToast(msg, showUndo = false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  document.getElementById('toast-undo-btn').style.display = showUndo ? 'inline-block' : 'none';
+  t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(hideToast, 4000);
+}
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
+document.getElementById('toast-undo-btn').addEventListener('click', triggerUndo);
+
+// ===== ドロワー =====
 function openDrawer()  {
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer-overlay').classList.add('open');
@@ -795,7 +1068,7 @@ document.getElementById('menu-btn').addEventListener('click', openDrawer);
 document.getElementById('drawer-close').addEventListener('click', closeDrawer);
 document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
 
-// ===== インポート/エクスポート =====
+// ===== ダウンロードヘルパー =====
 function downloadText(filename, content, mime) {
   const blob = new Blob([content], { type: mime + ';charset=utf-8' });
   const url  = URL.createObjectURL(blob);
@@ -805,13 +1078,12 @@ function downloadText(filename, content, mime) {
   setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
 }
 
+// ===== エクスポート =====
 document.getElementById('btn-export-json').addEventListener('click', () => {
   closeDrawer();
   setTimeout(() => {
     const all = loadAll();
-    const json = JSON.stringify(all, null, 2);
-    const today = getTodayKey().replace(/\./g, '');
-    downloadText('jot_backup_' + today + '.json', json, 'application/json');
+    downloadText('jot_backup_' + currentKey.replace(/\./g, '') + '.json', JSON.stringify(all, null, 2), 'application/json');
     showToast('JSONをエクスポートしました');
   }, 300);
 });
@@ -832,12 +1104,12 @@ document.getElementById('btn-export-txt').addEventListener('click', () => {
       });
       text += '\n';
     });
-    const today = getTodayKey().replace(/\./g, '');
-    downloadText('jot_' + today + '.txt', text, 'text/plain');
+    downloadText('jot_' + currentKey.replace(/\./g, '') + '.txt', text, 'text/plain');
     showToast('テキストをエクスポートしました');
   }, 300);
 });
 
+// ===== インポート =====
 document.getElementById('btn-import').addEventListener('click', () => {
   closeDrawer();
   setTimeout(() => { document.getElementById('import-input').click(); }, 300);
@@ -850,23 +1122,21 @@ document.getElementById('import-input').addEventListener('change', function() {
   reader.onload = function(ev) {
     try {
       const data = JSON.parse(ev.target.result);
-      if (typeof data !== 'object' || Array.isArray(data) || data === null) throw new Error('invalid format');
+      if (typeof data !== 'object' || Array.isArray(data) || data === null) throw new Error();
       const validKeys = Object.keys(data).filter(k => /^\d{4}\.\d{2}\.\d{2}$/.test(k));
-      if (validKeys.length === 0) throw new Error('no valid date keys');
-      const merged = Object.assign({}, loadAll(), data);
-      saveAll(merged);
-      page = loadPage(todayKey);
-      renderItems();
+      if (validKeys.length === 0) throw new Error();
+      saveAll(Object.assign({}, loadAll(), data));
+      switchDay(currentKey);
       showToast('インポート完了 — ' + validKeys.length + ' 日分');
-    } catch(err) {
-      showToast('読み込み失敗：正しいJotのJSONファイルか確認してください');
+    } catch {
+      showToast('読み込み失敗：正しいJSONファイルか確認してください');
     }
     this.value = '';
   };
   reader.readAsText(file);
 });
 
-// ===== 0時自動リロード =====
+// ===== 0時リロード =====
 function scheduleNextDay() {
   const now = new Date();
   const next = new Date(now);
@@ -874,8 +1144,10 @@ function scheduleNextDay() {
   setTimeout(() => location.reload(), next - now);
 }
 
-// ===== システム起動 =====
-renderItems();
+// ===== 起動 =====
+const today = getTodayKey();
+maybeCarryOver(today);
+switchDay(today);
 focusNewInput();
 scheduleNextDay();
 
