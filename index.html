@@ -36,7 +36,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ===== 進捗バー（最上部固定） ===== */
+  /* ===== 進捗バー ===== */
   #progress-bar-wrap {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -54,7 +54,6 @@
     background: var(--check-border);
   }
 
-  /* 進捗テキスト */
   #progress-label {
     position: fixed;
     top: 12px;
@@ -88,7 +87,6 @@
     position: relative;
   }
 
-  /* ===== 日付 ===== */
   #date-label {
     font-size: 12px;
     letter-spacing: 0.1em;
@@ -115,7 +113,6 @@
   .item.dragging { opacity: 0.3; background-color: #fafafa; }
   .item.drag-over { border-top: 2px solid var(--text-main); }
 
-  /* ドラッグハンドル */
   .drag-handle {
     position: absolute;
     left: -24px;
@@ -189,7 +186,6 @@
     text-decoration-color: #CBCBC6;
   }
 
-  /* 見出し */
   .item.type-heading .item-text {
     font-size: 11px; font-weight: 500;
     letter-spacing: 0.1em; text-transform: uppercase;
@@ -197,7 +193,6 @@
   }
   .item.type-heading .checkbox { display: none; }
 
-  /* メモ */
   .item.type-memo .item-text {
     font-size: 13px; color: var(--text-sub);
     padding-left: 18px;
@@ -211,7 +206,6 @@
     background: var(--check-border);
   }
 
-  /* 引き継ぎバッジ */
   .carry-badge {
     flex-shrink: 0;
     font-size: 10px; letter-spacing: 0.04em;
@@ -238,7 +232,7 @@
     pointer-events: none;
   }
 
-  /* ===== ブランド + メニューボタン ===== */
+  /* ===== トップバー＆メニュー ===== */
   #topbar {
     position: fixed;
     top: 16px; right: 24px;
@@ -260,7 +254,6 @@
   #menu-btn:hover { opacity: 0.7; }
   #menu-btn span { display: block; width: 14px; height: 1px; background: var(--text-main); }
 
-  /* ===== ドロワーメニュー ===== */
   #drawer {
     position: fixed;
     top: 0; right: 0; bottom: 0;
@@ -318,7 +311,6 @@
 
   #import-input { display: none; }
 
-  /* ===== ヒント ===== */
   #hint {
     position: fixed; bottom: 24px; right: 28px;
     font-size: 11px; color: var(--text-sub);
@@ -333,7 +325,6 @@
     padding: 1px 5px; color: var(--text-heading);
   }
 
-  /* ===== トースト ===== */
   #toast {
     position: fixed; bottom: 28px; left: 50%;
     transform: translateX(-50%) translateY(8px);
@@ -388,11 +379,11 @@
   <div class="drawer-section">
     <div class="drawer-label">ショートカット</div>
     <div style="font-size:12px; color:var(--text-sub); line-height:2;">
-      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Enter</kbd> タスクを追加<br>
-      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Shift+Enter</kbd> 改行<br>
-      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">#</kbd> 見出し <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">-</kbd> メモ<br>
-      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Backspace</kbd> 空行で前を編集<br>
-      <kbd style="font-family:inherit;font-size:10px;background:#F0EFE9;border-radius:3px;padding:1px 5px;color:var(--text-heading)">Drag</kbd> 並び替え
+      <kbd>Enter</kbd> タスクを追加<br>
+      <kbd>Shift+Enter</kbd> 改行<br>
+      <kbd>#</kbd> 見出し <kbd>-</kbd> メモ<br>
+      <kbd>Backspace</kbd> 空行で前を編集<br>
+      <kbd>Drag</kbd> 並び替え
     </div>
   </div>
 </div>
@@ -413,7 +404,7 @@
 <div id="toast"></div>
 
 <script>
-// ===== ストレージ =====
+// ===== ストレージロジック =====
 const DB_KEY = 'jot_pages';
 
 function getTodayKey() {
@@ -429,7 +420,7 @@ function loadPage(key) { const a = loadAll(); return a[key] || { items: [] }; }
 function savePage(key, pg) { const a = loadAll(); a[key] = pg; saveAll(a); }
 function uid() { return Math.random().toString(36).slice(2,10); }
 
-// ===== 💻 クラシック・タイプライター音響合成エンジン =====
+// ===== 🎹 クラシック・タイプライター音響合成エンジン =====
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function createHeavyNoise() {
@@ -441,8 +432,8 @@ function createHeavyNoise() {
 }
 const noiseBuffer = createHeavyNoise();
 
-// キー配列による音の左右定位マッピング
-const surfaceKeyPanMap = {
+// 打鍵位置（ステレオ・パンニング）マッピング
+const keyPanMap = {
   '1':-0.84, '2':-0.71, '3':-0.58, '4':-0.45, '5':-0.32, '6':-0.19, '7':-0.06, '8':0.07, '9':0.20, '0':0.33, '-':0.46, '^':0.59, '¥':0.72, 'Backspace':0.90,
   'q':-0.80, 'w':-0.67, 'e':-0.54, 'r':-0.41, 't':-0.28, 'y':-0.15, 'u':-0.02, 'i':0.11, 'o':0.24, 'p':0.37, '@':0.50, '[':0.63, 'Enter':0.88,
   'a':-0.76, 's':-0.63, 'd':-0.50, 'f':-0.37, 'g':-0.24, 'h':-0.11, 'j':0.02, 'k':0.15, 'l':0.28, ';':0.41, ':':0.54, ']':0.67,
@@ -450,11 +441,11 @@ const surfaceKeyPanMap = {
   ' ': 0.00
 };
 
-function getSurfacePan(key) {
+function getKeyPan(key) {
   if (!key) return 0;
-  if (surfaceKeyPanMap[key] !== undefined) return surfaceKeyPanMap[key];
+  if (keyPanMap[key] !== undefined) return keyPanMap[key];
   const upper = key.toUpperCase();
-  if (surfaceKeyPanMap[upper] !== undefined) return surfaceKeyPanMap[upper];
+  if (keyPanMap[upper] !== undefined) return keyPanMap[upper];
   return (Math.random() * 2 - 1) * 0.2;
 }
 
@@ -465,16 +456,15 @@ window.addEventListener('click', unlockAudio);
 window.addEventListener('touchstart', unlockAudio);
 window.addEventListener('keydown', unlockAudio);
 
-function playSurfaceSound(type, keyName = '') {
+function playJotSound(type, keyName = '') {
   unlockAudio();
   const now = audioCtx.currentTime;
 
   const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-  const targetPan = (type === 'space') ? 0.0 : (type === 'check' ? -0.65 : getSurfacePan(keyName));
+  const targetPan = (type === 'space') ? 0.0 : (type === 'check' ? -0.65 : getKeyPan(keyName));
   
   if (panner) { panner.pan.setValueAtTime(targetPan, now); }
 
-  // アナログ筐体の低音共振と高域特性をシミュレート
   const filter = audioCtx.createBiquadFilter();
   filter.type = 'bandpass';
   filter.frequency.setValueAtTime(type === 'add' ? 1200 : 900 + (Math.random() * 300), now);
@@ -483,13 +473,12 @@ function playSurfaceSound(type, keyName = '') {
   if (panner) { filter.connect(panner); panner.connect(audioCtx.destination); }
   else { filter.connect(audioCtx.destination); }
 
-  // 新・メカニカル物理音響合成ロジック
-  function synthMechanicalClick(baseFreq, volume, noiseMix, duration, typePattern) {
+  function synthMechanicalClick(baseFreq, volume, noiseMix, duration) {
     const jitter = (Math.random() * 2 - 1) * 40;
     const freq = baseFreq + jitter;
     const dynVol = volume * (0.8 + Math.random() * 0.4);
 
-    // 1. 金属アームがリボン・紙を叩くインパクト音 (強い高周波アタック)
+    // 1. 金属アームが紙を叩く破裂アタック音
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
     osc1.type = 'triangle';
@@ -498,7 +487,7 @@ function playSurfaceSound(type, keyName = '') {
     gain1.gain.setValueAtTime(dynVol, now);
     gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
 
-    // 2. 内部レバーのガチャリという金属反響音
+    // 2. 内部レバーの金属反響
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
     osc2.type = 'square';
@@ -506,7 +495,7 @@ function playSurfaceSound(type, keyName = '') {
     gain2.gain.setValueAtTime(dynVol * 0.4, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    // 3. 原紙を鋭く打つ高摩擦の破裂ノイズ
+    // 3. インパクト瞬間の摩擦ホワイトノイズ
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
@@ -523,36 +512,34 @@ function playSurfaceSound(type, keyName = '') {
   }
 
   switch (type) {
-    case 'type': // パチン！と快快に響くキー打鍵
-      synthMechanicalClick(320, 0.45, 3.8, 0.06, 'key');
+    case 'type': // パチン！と弾ける印字音
+      synthMechanicalClick(320, 0.45, 3.8, 0.06);
       break;
-    case 'space': // トンッ！と少し太く抜けるスペースバー
-      synthMechanicalClick(180, 0.55, 2.5, 0.10, 'space');
+    case 'space': // トンッ！と重く響くスペースバー
+      synthMechanicalClick(180, 0.55, 2.5, 0.10);
       break;
-    case 'add': // チンッ！ガラガラ…という爽快なキャリッジリターン（改行）
-      // ① ベルの「チンッ！」音
+    case 'add': // チンッ！ガラガラ…（改行時のベルと台座の移動音）
       const bellOsc = audioCtx.createOscillator();
       const bellGain = audioCtx.createGain();
       bellOsc.type = 'sine';
-      bellOsc.frequency.setValueAtTime(2100, now); // 高いベルの金属音
+      bellOsc.frequency.setValueAtTime(2100, now);
       bellGain.gain.setValueAtTime(0.35, now);
       bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
       bellOsc.connect(bellGain); bellGain.connect(audioCtx.destination);
       bellOsc.start(now); bellOsc.stop(now + 0.2);
 
-      // ② 紙送り台が滑る「ガシャッ」音
-      synthMechanicalClick(140, 0.60, 4.5, 0.18, 'return');
+      synthMechanicalClick(140, 0.60, 4.5, 0.18);
       break;
-    case 'delete': // ガチャッという少し重たいバックスペース音
-      synthMechanicalClick(220, 0.40, 3.0, 0.08, 'delete');
+    case 'delete': // ガチャッ（重い逆行音）
+      synthMechanicalClick(220, 0.40, 3.0, 0.08);
       break;
-    case 'check': // カチリと決まるラッチ・トグルスイッチ音
-      synthMechanicalClick(480, 0.42, 1.5, 0.05, 'check');
+    case 'check': // カチリッ（完了チェックボックス専用：マイクロスイッチ音）
+      synthMechanicalClick(480, 0.42, 1.5, 0.05);
       break;
   }
 }
 
-// ===== 引き継ぎ =====
+// ===== 引き継ぎロジック =====
 function maybeCarryOver(todayKey) {
   const all = loadAll();
   const keys = Object.keys(all).sort();
@@ -570,7 +557,7 @@ function maybeCarryOver(todayKey) {
   savePage(todayKey, today);
 }
 
-// ===== 進捗バー =====
+// ===== UI・進捗管理 =====
 function updateProgress() {
   const tasks = page.items.filter(it => it.type === 'task');
   const done  = tasks.filter(it => it.checked).length;
@@ -592,7 +579,7 @@ function updateProgress() {
   label._timer = setTimeout(() => label.classList.remove('visible'), 2400);
 }
 
-// ===== 記法 =====
+// ===== ノート変換パーサー =====
 function getItemType(text) {
   if (text.startsWith('# ') || text === '#') return 'heading';
   if (text.startsWith('- ') || text === '-') return 'memo';
@@ -609,13 +596,13 @@ function getRawText(display, type) {
   return display;
 }
 
-// ===== 初期化 =====
+// ===== アプリケーション初期化 =====
 const todayKey = getTodayKey();
 document.getElementById('date-label').textContent = todayKey;
 maybeCarryOver(todayKey);
 let page = loadPage(todayKey);
 
-// ===== レンダリング =====
+// ===== アイテムの描画とイベント管理 =====
 function renderItems() {
   const ul = document.getElementById('items');
   ul.innerHTML = '';
@@ -626,7 +613,7 @@ function renderItems() {
       + (item.checked ? ' done' : '');
     li.dataset.idx = idx;
 
-    // ハンドル
+    // 並び替え用ハンドル
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.innerHTML = '<span></span><span></span><span></span>';
@@ -637,7 +624,7 @@ function renderItems() {
       const cb = document.createElement('input');
       cb.type = 'checkbox'; cb.className = 'checkbox'; cb.checked = item.checked;
       cb.addEventListener('change', () => {
-        playSurfaceSound('check');
+        playJotSound('check'); // 専用のラッチスイッチ音を再生
         page.items[idx].checked = cb.checked;
         savePage(todayKey, page);
         li.classList.toggle('done', cb.checked);
@@ -646,7 +633,7 @@ function renderItems() {
       li.appendChild(cb);
     }
 
-    // テキスト
+    // 各インラインテキスト入力欄
     const span = document.createElement('div');
     span.className = 'item-text';
     span.contentEditable = 'true';
@@ -664,7 +651,7 @@ function renderItems() {
       } else if (e.key === 'Backspace') {
         if (span.textContent === '') {
           e.preventDefault();
-          playSurfaceSound('delete', 'Backspace');
+          playJotSound('delete', 'Backspace');
           page.items.splice(idx, 1);
           savePage(todayKey, page);
           renderItems(); 
@@ -677,39 +664,33 @@ function renderItems() {
             s.removeAllRanges(); s.addRange(r);
           } else { focusNewInput(); }
         } else {
-          playSurfaceSound('delete', 'Backspace');
+          playJotSound('delete', 'Backspace');
         }
       } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
-        if (e.key === ' ') {
-          playSurfaceSound('space', ' ');
-        } else {
-          playSurfaceSound('type', e.key);
-        }
+        if (e.key === ' ') { playJotSound('space', ' '); }
+        else { playJotSound('type', e.key); }
       }
     });
     li.appendChild(span);
 
-    // 引き継ぎバッジ
+    // 引き継ぎマーク
     if (item.carriedFrom) {
       const b = document.createElement('span');
       b.className = 'carry-badge'; b.textContent = '引き継ぎ';
       li.appendChild(b);
     }
 
-    // ドラッグ＆ドロップ並び替えシステム
+    // ドラッグ＆ドロップ機能
     li.draggable = true;
-    
     li.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', String(idx));
       setTimeout(() => li.classList.add('dragging'), 0);
     });
-    
     li.addEventListener('dragend', () => {
       li.classList.remove('dragging');
       document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     });
-    
     li.addEventListener('dragover', e => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
@@ -718,24 +699,15 @@ function renderItems() {
         li.classList.add('drag-over');
       }
     });
-
-    li.addEventListener('dragleave', () => {
-      li.classList.remove('drag-over');
-    });
-    
+    li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
     li.addEventListener('drop', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      
+      e.preventDefault(); e.stopPropagation();
       const fromIndexStr = e.dataTransfer.getData('text/plain');
       if (fromIndexStr === '') return;
-      
       const from = parseInt(fromIndexStr, 10);
       if (isNaN(from) || from === idx) return;
-      
       const moved = page.items.splice(from, 1)[0];
       page.items.splice(idx, 0, moved);
-      
       savePage(todayKey, page); 
       renderItems(); 
       updateProgress();
@@ -746,7 +718,7 @@ function renderItems() {
   updateProgress();
 }
 
-// ===== 入力欄 =====
+// ===== ボトム新規入力行 =====
 const newInput = document.getElementById('new-input-field');
 
 function focusNewInput() {
@@ -763,11 +735,11 @@ newInput.addEventListener('keydown', e => {
     savePage(todayKey, page);
     newInput.value = '';
     renderItems();
-    playSurfaceSound('add', 'Enter');
+    playJotSound('add', 'Enter'); // 改行ベルシステムを鳴らす
   } else if (e.key === 'Backspace') {
     if (newInput.value === '' && page.items.length > 0) {
       e.preventDefault();
-      playSurfaceSound('delete', 'Backspace');
+      playJotSound('delete', 'Backspace');
       const els = document.querySelectorAll('.item-text');
       if (els.length > 0) {
         const last = els[els.length-1]; last.focus();
@@ -776,14 +748,11 @@ newInput.addEventListener('keydown', e => {
         s.removeAllRanges(); s.addRange(r);
       }
     } else {
-      playSurfaceSound('delete', 'Backspace');
+      playJotSound('delete', 'Backspace');
     }
   } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
-    if (e.key === ' ') {
-      playSurfaceSound('space', ' ');
-    } else {
-      playSurfaceSound('type', e.key);
-    }
+    if (e.key === ' ') { playJotSound('space', ' '); }
+    else { playJotSound('type', e.key); }
   }
 });
 
@@ -804,7 +773,7 @@ document.getElementById('page').addEventListener('click', e => {
   }
 });
 
-// ===== トースト =====
+// ===== 通知（トースト） =====
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -812,7 +781,7 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
-// ===== ドロワー =====
+// ===== ドロワーコントロール =====
 function openDrawer()  {
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer-overlay').classList.add('open');
@@ -826,20 +795,16 @@ document.getElementById('menu-btn').addEventListener('click', openDrawer);
 document.getElementById('drawer-close').addEventListener('click', closeDrawer);
 document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
 
-// ===== ダウンロードヘルパー =====
+// ===== インポート/エクスポート =====
 function downloadText(filename, content, mime) {
   const blob = new Blob([content], { type: mime + ';charset=utf-8' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href     = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
+  a.href     = url; a.download = filename; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
   setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
 }
 
-// ===== エクスポート（JSON） =====
 document.getElementById('btn-export-json').addEventListener('click', () => {
   closeDrawer();
   setTimeout(() => {
@@ -851,7 +816,6 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
   }, 300);
 });
 
-// ===== エクスポート（テキスト） =====
 document.getElementById('btn-export-txt').addEventListener('click', () => {
   closeDrawer();
   setTimeout(() => {
@@ -874,12 +838,9 @@ document.getElementById('btn-export-txt').addEventListener('click', () => {
   }, 300);
 });
 
-// ===== インポート（JSON） =====
 document.getElementById('btn-import').addEventListener('click', () => {
   closeDrawer();
-  setTimeout(() => {
-    document.getElementById('import-input').click();
-  }, 300);
+  setTimeout(() => { document.getElementById('import-input').click(); }, 300);
 });
 
 document.getElementById('import-input').addEventListener('change', function() {
@@ -889,13 +850,10 @@ document.getElementById('import-input').addEventListener('change', function() {
   reader.onload = function(ev) {
     try {
       const data = JSON.parse(ev.target.result);
-      if (typeof data !== 'object' || Array.isArray(data) || data === null) {
-        throw new Error('invalid format');
-      }
+      if (typeof data !== 'object' || Array.isArray(data) || data === null) throw new Error('invalid format');
       const validKeys = Object.keys(data).filter(k => /^\d{4}\.\d{2}\.\d{2}$/.test(k));
       if (validKeys.length === 0) throw new Error('no valid date keys');
-      const existing = loadAll();
-      const merged = Object.assign({}, existing, data);
+      const merged = Object.assign({}, loadAll(), data);
       saveAll(merged);
       page = loadPage(todayKey);
       renderItems();
@@ -908,7 +866,7 @@ document.getElementById('import-input').addEventListener('change', function() {
   reader.readAsText(file);
 });
 
-// ===== 0時リロード =====
+// ===== 0時自動リロード =====
 function scheduleNextDay() {
   const now = new Date();
   const next = new Date(now);
@@ -916,7 +874,7 @@ function scheduleNextDay() {
   setTimeout(() => location.reload(), next - now);
 }
 
-// ===== 起動 =====
+// ===== システム起動 =====
 renderItems();
 focusNewInput();
 scheduleNextDay();
