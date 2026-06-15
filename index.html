@@ -194,7 +194,7 @@
     gap: 2.5px;
     padding: 2px;
     z-index: 10;
-    touch-action: none; /* スマホドラッグ用のフリックスクロール干渉防止 */
+    touch-action: none; /* スマホドラッグ用の干渉防止 */
   }
   .drag-handle:active { cursor: grabbing; }
   .drag-handle span { display: block; width: 10px; height: 1px; background: var(--check-border); }
@@ -414,7 +414,6 @@
     font-size: 11px; font-weight: 500; cursor: pointer; text-decoration: underline; padding: 2px 4px;
   }
   #toast-undo-btn:hover { color: var(--text-main); }
-  /* トースト用のダークテーマ補正 */
   @media (prefers-color-scheme: dark) {
     #toast-undo-btn:hover { color: var(--bg-main); }
   }
@@ -698,7 +697,7 @@ function getRawText(display, type) {
   return display;
 }
 
-// ===== 画面切り替え（過去ログ・カレンダー連動） =====
+// ===== 画面切り替え =====
 function switchDay(key) {
   currentKey = key;
   document.getElementById('date-label').textContent = currentKey;
@@ -735,7 +734,7 @@ function triggerUndo() {
   hideToast();
 }
 
-// ===== レンダリング (ドラッグ＆ショートカット完全統合) =====
+// ===== レンダリング =====
 function renderItems() {
   const ul = document.getElementById('items');
   ul.innerHTML = '';
@@ -773,7 +772,7 @@ function renderItems() {
     span.spellcheck = false;
     span.textContent = getDisplayText(item.text, item.type);
 
-    // 既存行への「マークダウン風切り替え」動的対応
+    // 「マークダウン風切り替え」動的対応
     span.addEventListener('input', () => {
       let currentText = span.textContent;
       let newType = item.type;
@@ -803,7 +802,8 @@ function renderItems() {
           e.preventDefault();
           deleteItem(idx);
         }
-      } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey && e.key !== 'Enter') {
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        // e.key.length === 1 でShift/Controlなどの機能キー単体による誤鳴動・長押し鳴動を防ぎます
         if (e.key === ' ') { playJotSound('space', ' '); }
         else { playJotSound('type', e.key); }
       }
@@ -945,7 +945,7 @@ newInput.addEventListener('keydown', e => {
         s.removeAllRanges(); s.addRange(r);
       }
     }
-  } else if (!e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey && e.key !== 'Enter') {
+  } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
     if (e.key === ' ') { playJotSound('space', ' '); }
     else { playJotSound('type', e.key); }
   }
@@ -967,7 +967,7 @@ newInput.addEventListener('keydown', e => {
   }
 });
 
-// 全体的なキーボードショートカット (Ctrl+Z でUndo)
+// 全体ショートカット (Ctrl+Z でUndo)
 window.addEventListener('keydown', e => {
   if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
     if (document.activeElement.id !== 'new-input-field' && document.activeElement.tagName !== 'INPUT') {
