@@ -28,7 +28,6 @@
     --kbd-bg: #F0EFE9;
   }
 
-  /* オート・ダークモード */
   @media (prefers-color-scheme: dark) {
     :root {
       --line-color: #2C2C2A;
@@ -55,7 +54,6 @@
     transition: background 0.3s, color 0.3s;
   }
 
-  /* ===== 進捗バー ===== */
   #progress-bar-wrap {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -89,7 +87,6 @@
   }
   #progress-label.visible { opacity: 1; }
 
-  /* ===== ページ ===== */
   #page {
     min-height: 100vh;
     max-width: var(--max-w);
@@ -106,7 +103,6 @@
     position: relative;
   }
 
-  /* ===== 日付 ＆ カレンダーナビ ===== */
   #date-container {
     position: relative;
     display: inline-flex;
@@ -139,7 +135,6 @@
   }
   .date-nav-btn:hover { color: var(--text-main); }
 
-  /* カレンダードロップダウン */
   #calendar-picker {
     position: absolute; top: 36px; left: 0;
     background: var(--bg-main);
@@ -163,10 +158,9 @@
   .cal-cell.has-data { font-weight: 500; text-decoration: underline; text-decoration-color: var(--text-sub); }
   .cal-cell.current { background: var(--text-main); color: var(--bg-main); font-weight: 500; }
 
-  /* ===== アイテムリスト ===== */
-  #items { list-style: none; }
+  #paper-lines { list-style: none; }
 
-  .item {
+  .paper-line {
     display: flex;
     align-items: center;
     min-height: var(--line-h);
@@ -174,10 +168,11 @@
     gap: 10px;
     transition: opacity 0.15s, background-color 0.15s;
   }
-  .item.dragging { opacity: 0.3; background-color: var(--carry-bg); }
-  .item.drag-over { border-top: 2px solid var(--text-main); }
+  
+  /* 紙を浮かせてちぎるような手触り */
+  .paper-line.weightless { opacity: 0.3; background-color: var(--carry-bg); }
+  .paper-line.crease { border-top: 2px solid var(--text-main); }
 
-  /* ドラッグハンドル */
   .drag-handle {
     position: absolute;
     left: -24px;
@@ -194,13 +189,12 @@
     gap: 2.5px;
     padding: 2px;
     z-index: 10;
-    touch-action: none; /* スマホドラッグ用の干渉防止 */
+    touch-action: none;
   }
   .drag-handle:active { cursor: grabbing; }
   .drag-handle span { display: block; width: 10px; height: 1px; background: var(--check-border); }
-  .item:hover .drag-handle { opacity: 1; }
+  .paper-line:hover .drag-handle { opacity: 1; }
 
-  /* ===== チェックボックス ===== */
   .checkbox {
     flex-shrink: 0;
     width: 15px; height: 15px;
@@ -225,8 +219,7 @@
     transform: rotate(-45deg) translateY(1px);
   }
 
-  /* ===== テキスト ===== */
-  .item-text {
+  .line-ink {
     flex: 1;
     outline: none; border: none;
     background: transparent;
@@ -241,32 +234,30 @@
     cursor: text;
     resize: none; overflow: hidden;
   }
-  .item-text:empty::before {
+  .line-ink:empty::before {
     content: attr(data-placeholder);
     color: var(--text-sub);
     pointer-events: none;
   }
-  .item.done .item-text {
+  .paper-line.done .line-ink {
     color: var(--check-done);
     text-decoration: line-through;
     text-decoration-color: var(--check-done);
   }
 
-  /* 見出し */
-  .item.type-heading .item-text {
+  .paper-line.type-heading .line-ink {
     font-size: 11px; font-weight: 500;
     letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--text-heading);
   }
-  .item.type-heading .checkbox { display: none; }
+  .paper-line.type-heading .checkbox { display: none; }
 
-  /* メモ */
-  .item.type-memo .item-text {
+  .paper-line.type-memo .line-ink {
     font-size: 13px; color: var(--text-sub);
     padding-left: 18px;
   }
-  .item.type-memo .checkbox { display: none; }
-  .item.type-memo::before {
+  .paper-line.type-memo .checkbox { display: none; }
+  .paper-line.type-memo::before {
     content: '';
     position: absolute; left: 0; top: 50%;
     transform: translateY(-50%);
@@ -274,7 +265,6 @@
     background: var(--check-border);
   }
 
-  /* 引き継ぎバッジ */
   .carry-badge {
     flex-shrink: 0;
     font-size: 10px; letter-spacing: 0.04em;
@@ -284,12 +274,11 @@
     user-select: none;
   }
 
-  /* ===== 入力行 ===== */
-  #new-input {
+  #feed-line {
     display: flex; align-items: center;
     min-height: var(--line-h); gap: 10px; cursor: text;
   }
-  #new-input-field {
+  #feed-well {
     flex: 1; outline: none; border: none;
     background: transparent; font-family: inherit;
     font-size: 15px; line-height: var(--line-h);
@@ -301,7 +290,6 @@
     pointer-events: none;
   }
 
-  /* ===== ブランド + メニューボタン ===== */
   #topbar {
     position: fixed;
     top: 16px; right: 24px;
@@ -323,7 +311,6 @@
   #menu-btn:hover { opacity: 0.7; }
   #menu-btn span { display: block; width: 14px; height: 1px; background: var(--text-main); }
 
-  /* ===== ドロワーメニュー ===== */
   #drawer {
     position: fixed;
     top: 0; right: 0; bottom: 0;
@@ -381,7 +368,6 @@
 
   #import-input { display: none; }
 
-  /* ===== ヒント ===== */
   #hint {
     position: fixed; bottom: 24px; right: 28px;
     font-size: 11px; color: var(--text-sub);
@@ -396,7 +382,6 @@
     padding: 1px 5px; color: var(--text-heading);
   }
 
-  /* ===== トースト（Undo元に戻す機能付き） ===== */
   #toast {
     position: fixed; bottom: 28px; left: 50%;
     transform: translateX(-50%) translateY(8px);
@@ -488,10 +473,10 @@
     </div>
   </div>
 
-  <ul id="items"></ul>
-  <div id="new-input">
+  <ul id="paper-lines"></ul>
+  <div id="feed-line">
     <div class="input-checkbox-ghost"></div>
-    <input id="new-input-field" type="text" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="書く...">
+    <input id="feed-well" type="text" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="書く...">
   </div>
 </div>
 
@@ -504,23 +489,23 @@
 </div>
 
 <script>
-// ===== ストレージ =====
-const DB_KEY = 'jot_pages';
-let currentKey = getTodayKey();
-let page = { items: [] };
-let lastDeletedItem = null; // Undo一時バッファ
+// ローカル環境との対話経路
+const ARCHIVE_BOX = 'jot_pages';
+let activeDate = getTodayKey();
+let scroll = { glyphs: [] };
+let scrapPaper = null; // 誤って引きちぎった行の救出バッファ
 
 function formatDateKey(date) {
   return `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}`;
 }
 function getTodayKey() { return formatDateKey(new Date()); }
-function loadAll() { try { return JSON.parse(localStorage.getItem(DB_KEY) || '{}'); } catch { return {}; } }
-function saveAll(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
-function loadPage(key) { const a = loadAll(); return a[key] || { items: [] }; }
-function savePage(key, pg) { const a = loadAll(); a[key] = pg; saveAll(a); }
+function uncoverArchive() { try { return JSON.parse(localStorage.getItem(ARCHIVE_BOX) || '{}'); } catch { return {}; } }
+function sealArchive(data) { localStorage.setItem(ARCHIVE_BOX, JSON.stringify(data)); }
+function readScroll(key) { const a = uncoverArchive(); return a[key] || { glyphs: [] }; }
+function writeScroll(key, sc) { const a = uncoverArchive(); a[key] = sc; sealArchive(a); }
 function uid() { return Math.random().toString(36).slice(2,10); }
 
-// ===== 💻 3D立体音響・クラシックタイプライター合成エンジン =====
+// どうしてもBraveやiOSが音を眠らせたがるから、強引に叩き起こすおまじない
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function createHeavyNoise() {
@@ -532,7 +517,7 @@ function createHeavyNoise() {
 }
 const noiseBuffer = createHeavyNoise();
 
-// Surface配列実測によるステレオパンニングマップ (-1.0:左, 1.0:右)
+// Surface Type Cover の物理キートップ位置比率。ミリ単位の実測値をそのままブチ込んだ
 const surfaceKeyPanMap = {
   '1':-0.84, '2':-0.71, '3':-0.58, '4':-0.45, '5':-0.32, '6':-0.19, '7':-0.06, '8':0.07, '9':0.20, '0':0.33, '-':0.46, '^':0.59, '¥':0.72, 'Backspace':0.90,
   'q':-0.80, 'w':-0.67, 'e':-0.54, 'r':-0.41, 't':-0.28, 'y':-0.15, 'u':-0.02, 'i':0.11, 'o':0.24, 'p':0.37, '@':0.50, '[':0.63, 'Enter':0.88,
@@ -556,7 +541,7 @@ window.addEventListener('click', unlockAudio);
 window.addEventListener('touchstart', unlockAudio);
 window.addEventListener('keydown', unlockAudio);
 
-function playJotSound(type, keyName = '') {
+function clack(type, keyName = '') {
   unlockAudio();
   const now = audioCtx.currentTime;
 
@@ -565,6 +550,7 @@ function playJotSound(type, keyName = '') {
   
   if (panner) { panner.pan.setValueAtTime(targetPan, now); }
 
+  // 筐体の金属共振フィルタ。Q値を高めにしてアナログ特有の耳障りな共鳴をあえて残す
   const filter = audioCtx.createBiquadFilter();
   filter.type = 'bandpass';
   filter.frequency.setValueAtTime(type === 'add' ? 1200 : 900 + (Math.random() * 300), now);
@@ -573,12 +559,11 @@ function playJotSound(type, keyName = '') {
   if (panner) { filter.connect(panner); panner.connect(audioCtx.destination); }
   else { filter.connect(audioCtx.destination); }
 
-  function synthMechanicalClick(baseFreq, volume, noiseMix, duration) {
+  function strikeMetal(baseFreq, volume, noiseMix, duration) {
     const jitter = (Math.random() * 2 - 1) * 40;
     const freq = baseFreq + jitter;
     const dynVol = volume * (0.8 + Math.random() * 0.4);
 
-    // 1. レバー打撃インパクト (強いアタック)
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
     osc1.type = 'triangle';
@@ -587,7 +572,6 @@ function playJotSound(type, keyName = '') {
     gain1.gain.setValueAtTime(dynVol, now);
     gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
 
-    // 2. 内部シャーシ反響音
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
     osc2.type = 'square';
@@ -595,7 +579,6 @@ function playJotSound(type, keyName = '') {
     gain2.gain.setValueAtTime(dynVol * 0.4, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    // 3. インプット面摩擦紙こすれ音
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
@@ -613,13 +596,13 @@ function playJotSound(type, keyName = '') {
 
   switch (type) {
     case 'type': 
-      synthMechanicalClick(320, 0.45, 3.8, 0.06);
+      strikeMetal(320, 0.45, 3.8, 0.06);
       break;
     case 'space': 
-      synthMechanicalClick(180, 0.55, 2.5, 0.10);
+      strikeMetal(180, 0.55, 2.5, 0.10);
       break;
     case 'add': 
-      // 改行「チンッ！」の独立ベル
+      // チンッ！と空間に抜ける改行ベル
       const bellOsc = audioCtx.createOscillator();
       const bellGain = audioCtx.createGain();
       bellOsc.type = 'sine';
@@ -629,38 +612,37 @@ function playJotSound(type, keyName = '') {
       bellOsc.connect(bellGain); bellGain.connect(audioCtx.destination);
       bellOsc.start(now); bellOsc.stop(now + 0.2);
 
-      synthMechanicalClick(140, 0.60, 4.5, 0.18);
+      strikeMetal(140, 0.60, 4.5, 0.18);
       break;
     case 'delete': 
-      synthMechanicalClick(220, 0.40, 3.0, 0.08);
+      strikeMetal(220, 0.40, 3.0, 0.08);
       break;
     case 'check': 
-      synthMechanicalClick(480, 0.42, 1.5, 0.05);
+      strikeMetal(480, 0.42, 1.5, 0.05);
       break;
   }
 }
 
-// ===== 引き継ぎ =====
-function maybeCarryOver(todayKey) {
-  const all = loadAll();
+// 昨日のやり残しを未練がましく今日の紙に糊付けする処理
+function shiftLeftovers(todayKey) {
+  const all = uncoverArchive();
   const keys = Object.keys(all).sort();
   const prevKey = keys.filter(k => k < todayKey).pop();
   if (!prevKey) return;
   const prev = all[prevKey];
-  const today = all[todayKey] || { items: [] };
+  const today = all[todayKey] || { glyphs: [] };
   if (today.carriedOver) return;
-  const undone = (prev.items || []).filter(it => it.type === 'task' && !it.checked);
+  const undone = (prev.glyphs || []).filter(it => it.type === 'task' && !it.checked);
   today.carriedOver = true;
   if (undone.length > 0) {
     const carried = undone.map(it => ({ ...it, id: uid(), carriedFrom: prevKey, checked: false }));
-    today.items = [...carried, ...(today.items || [])];
+    today.glyphs = [...carried, ...(today.glyphs || [])];
   }
-  savePage(todayKey, today);
+  writeScroll(todayKey, today);
 }
 
-// ===== 進捗バー =====
-function updateProgress() {
-  const tasks = page.items.filter(it => it.type === 'task');
+function inkDensity() {
+  const tasks = scroll.glyphs.filter(it => it.type === 'task');
   const done  = tasks.filter(it => it.checked).length;
   const total = tasks.length;
   const bar   = document.getElementById('progress-bar');
@@ -680,99 +662,91 @@ function updateProgress() {
   label._timer = setTimeout(() => label.classList.remove('visible'), 2400);
 }
 
-// ===== 記法変換パーサー =====
-function getItemType(text) {
+function parseType(text) {
   if (text.startsWith('# ') || text === '#') return 'heading';
   if (text.startsWith('- ') || text === '-') return 'memo';
   return 'task';
 }
-function getDisplayText(text, type) {
+function cleanGlyphText(text, type) {
   if (type === 'heading') return text.replace(/^#\s*/, '');
   if (type === 'memo')    return text.replace(/^-\s*/, '');
   return text;
 }
-function getRawText(display, type) {
+function formatRawGlyph(display, type) {
   if (type === 'heading') return '# ' + display;
   if (type === 'memo')    return '- ' + display;
   return display;
 }
 
-// ===== 画面切り替え =====
-function switchDay(key) {
-  currentKey = key;
-  document.getElementById('date-label').textContent = currentKey;
-  page = loadPage(currentKey);
-  renderItems();
+function flipTo(key) {
+  activeDate = key;
+  document.getElementById('date-label').textContent = activeDate;
+  scroll = readScroll(activeDate);
+  printGlyphs();
   closeCalendar();
 }
 
-// ===== 削除 ＆ Undo システム =====
-function deleteItem(idx) {
-  lastDeletedItem = { index: idx, data: page.items[idx] };
-  page.items.splice(idx, 1);
-  savePage(currentKey, page);
-  renderItems();
-  playJotSound('delete', 'Backspace');
+function scratchOut(idx) {
+  scrapPaper = { index: idx, data: scroll.glyphs[idx] };
+  scroll.glyphs.splice(idx, 1);
+  writeScroll(activeDate, scroll);
+  printGlyphs();
+  clack('delete', 'Backspace');
   showToast('項目を削除しました', true);
   
-  const els = document.querySelectorAll('.item-text');
+  const els = document.querySelectorAll('.line-ink');
   if (els.length > 0) {
     const t = els[Math.max(0, idx - 1)]; t.focus();
     window.getSelection().selectAllChildren(t); window.getSelection().collapseToEnd();
-  } else { focusNewInput(); }
+  } else { dipNib(); }
 }
 
-function triggerUndo() {
-  if (!lastDeletedItem) return;
-  page.items.splice(lastDeletedItem.index, 0, lastDeletedItem.data);
-  savePage(currentKey, page);
-  renderItems();
-  playJotSound('delete', 'Backspace');
-  const els = document.querySelectorAll('.item-text');
-  if (els[lastDeletedItem.index]) els[lastDeletedItem.index].focus();
-  lastDeletedItem = null;
+function rescueScrap() {
+  if (!scrapPaper) return;
+  scroll.glyphs.splice(scrapPaper.index, 0, scrapPaper.data);
+  writeScroll(activeDate, scroll);
+  printGlyphs();
+  clack('delete', 'Backspace');
+  const els = document.querySelectorAll('.line-ink');
+  if (els[scrapPaper.index]) els[scrapPaper.index].focus();
+  scrapPaper = null;
   hideToast();
 }
 
-// ===== レンダリング =====
-function renderItems() {
-  const ul = document.getElementById('items');
+function printGlyphs() {
+  const ul = document.getElementById('paper-lines');
   ul.innerHTML = '';
-  page.items.forEach((item, idx) => {
+  scroll.glyphs.forEach((item, idx) => {
     const li = document.createElement('li');
-    li.className = 'item'
+    li.className = 'paper-line'
       + (item.type === 'heading' ? ' type-heading' : item.type === 'memo' ? ' type-memo' : '')
       + (item.checked ? ' done' : '');
     li.dataset.idx = idx;
 
-    // スマホ・デスクトップ並び替えハンドル
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.innerHTML = '<span></span><span></span><span></span>';
     li.appendChild(handle);
 
-    // チェックボックス
     if (item.type === 'task') {
       const cb = document.createElement('input');
       cb.type = 'checkbox'; cb.className = 'checkbox'; cb.checked = item.checked;
       cb.addEventListener('change', () => {
-        playJotSound('check');
-        page.items[idx].checked = cb.checked;
-        savePage(currentKey, page);
+        clack('check');
+        scroll.glyphs[idx].checked = cb.checked;
+        writeScroll(activeDate, scroll);
         li.classList.toggle('done', cb.checked);
-        updateProgress();
+        inkDensity();
       });
       li.appendChild(cb);
     }
 
-    // テキスト編集領域
     const span = document.createElement('div');
-    span.className = 'item-text';
+    span.className = 'line-ink';
     span.contentEditable = 'true';
     span.spellcheck = false;
-    span.textContent = getDisplayText(item.text, item.type);
+    span.textContent = cleanGlyphText(item.text, item.type);
 
-    // 「マークダウン風切り替え」動的対応
     span.addEventListener('input', () => {
       let currentText = span.textContent;
       let newType = item.type;
@@ -780,164 +754,154 @@ function renderItems() {
       else if (currentText.startsWith('- ')) { newType = 'memo'; }
       else if (item.type !== 'task' && !currentText.startsWith('# ') && !currentText.startsWith('- ')) { newType = 'task'; }
 
-      page.items[idx].type = newType;
-      page.items[idx].text = getRawText(currentText, newType);
-      savePage(currentKey, page);
+      scroll.glyphs[idx].type = newType;
+      scroll.glyphs[idx].text = formatRawGlyph(currentText, newType);
+      writeScroll(activeDate, scroll);
 
-      li.className = 'item' + (newType === 'heading' ? ' type-heading' : newType === 'memo' ? ' type-memo' : '') + (item.checked ? ' done' : '');
+      li.className = 'paper-line' + (newType === 'heading' ? ' type-heading' : newType === 'memo' ? ' type-memo' : '') + (item.checked ? ' done' : '');
       const hasCb = li.querySelector('.checkbox');
-      if (newType === 'task' && !hasCb) { renderItems(); span.focus(); }
+      if (newType === 'task' && !hasCb) { printGlyphs(); span.focus(); }
       else if (newType !== 'task' && hasCb) { hasCb.remove(); }
-      updateProgress();
+      inkDensity();
     });
     
     span.addEventListener('keydown', e => {
-      const els = document.querySelectorAll('.item-text');
+      const els = document.querySelectorAll('.line-ink');
 
-      // Backspace押し続けの文字消滅後無駄鳴りガード
       if (e.key === 'Backspace') {
         if (span.textContent.length > 0) {
-          playJotSound('delete', 'Backspace');
+          clack('delete', 'Backspace');
         } else if (span.textContent === '') {
           e.preventDefault();
-          deleteItem(idx);
+          scratchOut(idx);
         }
       } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-        // e.key.length === 1 でShift/Controlなどの機能キー単体による誤鳴動・長押し鳴動を防ぎます
-        if (e.key === ' ') { playJotSound('space', ' '); }
-        else { playJotSound('type', e.key); }
+        if (e.key === ' ') { clack('space', ' '); }
+        else { clack('type', e.key); }
       }
 
-      // Enterで次の行へ（無ければ新規入力）
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        if (idx + 1 < els.length) { els[idx+1].focus(); } else { focusNewInput(); }
+        if (idx + 1 < els.length) { els[idx+1].focus(); } else { dipNib(); }
       }
 
-      // 上下矢印キーのフォーカス移動
       if (e.key === 'ArrowDown' && !e.shiftKey && !e.ctrlKey) {
         e.preventDefault();
-        if (idx + 1 < els.length) els[idx+1].focus(); else focusNewInput();
+        if (idx + 1 < els.length) els[idx+1].focus(); else dipNib();
       }
       if (e.key === 'ArrowUp' && !e.shiftKey && !e.ctrlKey) {
         e.preventDefault();
         if (idx - 1 >= 0) els[idx-1].focus();
       }
 
-      // Ctrl + Shift + ↑/↓ で行を並び替え
       if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.shiftKey && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         const targetIdx = e.key === 'ArrowDown' ? idx + 1 : idx - 1;
-        if (targetIdx >= 0 && targetIdx < page.items.length) {
-          const moved = page.items.splice(idx, 1)[0];
-          page.items.splice(targetIdx, 0, moved);
-          savePage(currentKey, page); renderItems();
-          document.querySelectorAll('.item-text')[targetIdx].focus();
+        if (targetIdx >= 0 && targetIdx < scroll.glyphs.length) {
+          const moved = scroll.glyphs.splice(idx, 1)[0];
+          scroll.glyphs.splice(targetIdx, 0, moved);
+          writeScroll(activeDate, scroll); printGlyphs();
+          document.querySelectorAll('.line-ink')[targetIdx].focus();
         }
       }
 
-      // Ctrl + E でタスク完了をトグル
       if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         if (item.type === 'task') {
           item.checked = !item.checked;
-          savePage(currentKey, page); renderItems();
-          playJotSound('check');
-          document.querySelectorAll('.item-text')[idx].focus();
+          writeScroll(activeDate, scroll); printGlyphs();
+          clack('check');
+          document.querySelectorAll('.line-ink')[idx].focus();
         }
       }
     });
     li.appendChild(span);
 
-    // 引き継ぎマーク
     if (item.carriedFrom) {
       const b = document.createElement('span');
       b.className = 'carry-badge'; b.textContent = '引き継ぎ';
       li.appendChild(b);
     }
 
-    // デスクトップドラッグ
     li.draggable = true;
     li.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', String(idx));
-      setTimeout(() => li.classList.add('dragging'), 0);
+      setTimeout(() => li.classList.add('weightless'), 0);
     });
     li.addEventListener('dragend', () => {
-      li.classList.remove('dragging');
-      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      li.classList.remove('weightless');
+      document.querySelectorAll('.crease').forEach(el => el.classList.remove('crease'));
     });
     li.addEventListener('dragover', e => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      if (!li.classList.contains('dragging')) {
-        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-        li.classList.add('drag-over');
+      if (!li.classList.contains('weightless')) {
+        document.querySelectorAll('.crease').forEach(el => el.classList.remove('crease'));
+        li.classList.add('crease');
       }
     });
-    li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+    li.addEventListener('dragleave', () => li.classList.remove('crease'));
     li.addEventListener('drop', e => {
       e.preventDefault(); e.stopPropagation();
       const fromIndexStr = e.dataTransfer.getData('text/plain');
       if (fromIndexStr === '') return;
       const from = parseInt(fromIndexStr, 10);
       if (isNaN(from) || from === idx) return;
-      const moved = page.items.splice(from, 1)[0];
-      page.items.splice(idx, 0, moved);
-      savePage(currentKey, page); renderItems(); updateProgress();
+      const moved = scroll.glyphs.splice(from, 1)[0];
+      scroll.glyphs.splice(idx, 0, moved);
+      writeScroll(activeDate, scroll); printGlyphs(); inkDensity();
     });
 
-    // モバイルタッチドラッグ（スマホ最適化）
     let touchStartY = 0;
     handle.addEventListener('touchstart', e => {
       touchStartY = e.touches[0].clientY;
-      li.classList.add('dragging');
+      li.classList.add('weightless');
     }, {passive: true});
 
     handle.addEventListener('touchmove', e => {
       e.preventDefault();
       const touchY = e.touches[0].clientY;
       const targetEl = document.elementFromPoint(e.touches[0].clientX, touchY);
-      const closestLi = targetEl ? targetEl.closest('.item') : null;
-      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-      if (closestLi && closestLi !== li) { closestLi.classList.add('drag-over'); }
+      const closestLi = targetEl ? targetEl.closest('.paper-line') : null;
+      document.querySelectorAll('.crease').forEach(el => el.classList.remove('crease'));
+      if (closestLi && closestLi !== li) { closestLi.classList.add('crease'); }
     }, {passive: false});
 
     handle.addEventListener('touchend', e => {
-      li.classList.remove('dragging');
+      li.classList.remove('weightless');
       const endY = e.changedTouches[0].clientY;
       const targetEl = document.elementFromPoint(e.changedTouches[0].clientX, endY);
-      const closestLi = targetEl ? targetEl.closest('.item') : null;
-      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      const closestLi = targetEl ? targetEl.closest('.paper-line') : null;
+      document.querySelectorAll('.crease').forEach(el => el.classList.remove('crease'));
       if (closestLi && closestLi !== li) {
         const toIdx = parseInt(closestLi.dataset.idx);
-        const moved = page.items.splice(idx, 1)[0];
-        page.items.splice(toIdx, 0, moved);
-        savePage(currentKey, page); renderItems(); updateProgress();
+        const moved = scroll.glyphs.splice(idx, 1)[0];
+        scroll.glyphs.splice(toIdx, 0, moved);
+        writeScroll(activeDate, scroll); printGlyphs(); inkDensity();
       }
     });
 
     ul.appendChild(li);
   });
-  updateProgress();
+  inkDensity();
 }
 
-// ===== 下部新規入力欄 =====
-const newInput = document.getElementById('new-input-field');
+const ink = document.getElementById('feed-well');
 
-function focusNewInput() {
-  newInput.focus();
-  setTimeout(() => newInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+function dipNib() {
+  ink.focus();
+  setTimeout(() => ink.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 }
 
-newInput.addEventListener('keydown', e => {
+ink.addEventListener('keydown', e => {
   if (e.key === 'Backspace') {
-    if (newInput.value.length > 0) {
-      playJotSound('delete', 'Backspace');
-    } else if (newInput.value === '' && page.items.length > 0) {
+    if (ink.value.length > 0) {
+      clack('delete', 'Backspace');
+    } else if (ink.value === '' && scroll.glyphs.length > 0) {
       e.preventDefault();
-      playJotSound('delete', 'Backspace');
-      const els = document.querySelectorAll('.item-text');
+      clack('delete', 'Backspace');
+      const els = document.querySelectorAll('.line-ink');
       if (els.length > 0) {
         const last = els[els.length-1]; last.focus();
         const r = document.createRange(); const s = window.getSelection();
@@ -946,39 +910,38 @@ newInput.addEventListener('keydown', e => {
       }
     }
   } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-    if (e.key === ' ') { playJotSound('space', ' '); }
-    else { playJotSound('type', e.key); }
+    if (e.key === ' ') { clack('space', ' '); }
+    else { clack('type', e.key); }
   }
 
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    const raw = newInput.value.trim();
+    const raw = ink.value.trim();
     if (!raw) return;
-    page.items.push({ id: uid(), type: getItemType(raw), text: raw, checked: false });
-    savePage(currentKey, page);
-    newInput.value = '';
-    renderItems();
-    playJotSound('add', 'Enter');
+    scroll.glyphs.push({ id: uid(), type: parseType(raw), text: raw, checked: false });
+    writeScroll(activeDate, scroll);
+    ink.value = '';
+    printGlyphs();
+    clack('add', 'Enter');
   }
 
-  if (e.key === 'ArrowUp' && newInput.value === '') {
-    const els = document.querySelectorAll('.item-text');
+  if (e.key === 'ArrowUp' && ink.value === '') {
+    const els = document.querySelectorAll('.line-ink');
     if (els.length > 0) els[els.length-1].focus();
   }
 });
 
-// 全体ショートカット (Ctrl+Z でUndo)
 window.addEventListener('keydown', e => {
   if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
-    if (document.activeElement.id !== 'new-input-field' && document.activeElement.tagName !== 'INPUT') {
-      if (lastDeletedItem) { e.preventDefault(); triggerUndo(); }
+    if (document.activeElement.id !== 'feed-well' && document.activeElement.tagName !== 'INPUT') {
+      if (scrapPaper) { e.preventDefault(); rescueScrap(); }
     }
   }
 });
 
 let hintShown = false;
-newInput.addEventListener('input', () => {
-  if (!hintShown && newInput.value.length > 0) {
+ink.addEventListener('input', () => {
+  if (!hintShown && ink.value.length > 0) {
     hintShown = true;
     document.getElementById('hint').classList.add('visible');
     setTimeout(() => document.getElementById('hint').classList.remove('visible'), 4000);
@@ -987,13 +950,13 @@ newInput.addEventListener('input', () => {
 
 document.getElementById('page').addEventListener('click', e => {
   if (e.target === document.getElementById('page') ||
-      e.target === document.getElementById('items') ||
-      e.target === document.getElementById('new-input')) {
-    focusNewInput();
+      e.target === document.getElementById('paper-lines') ||
+      e.target === document.getElementById('feed-line')) {
+    dipNib();
   }
 });
 
-// ===== カレンダー実装 =====
+// カレンダー開閉用の切り出し
 let calDate = new Date();
 const dateLabel = document.getElementById('date-label');
 const picker = document.getElementById('calendar-picker');
@@ -1010,10 +973,10 @@ document.getElementById('btn-prev-day').addEventListener('click', () => { moveDa
 document.getElementById('btn-next-day').addEventListener('click', () => { moveDay(1); });
 
 function moveDay(offset) {
-  const parts = currentKey.split('.');
+  const parts = activeDate.split('.');
   const d = new Date(parts[0], parts[1]-1, parts[2]);
   d.setDate(d.getDate() + offset);
-  switchDay(formatDateKey(d));
+  flipTo(formatDateKey(d));
 }
 
 function renderCalendar() {
@@ -1027,7 +990,7 @@ function renderCalendar() {
 
   const firstDay = new Date(calDate.getFullYear(), calDate.getMonth(), 1).getDay();
   const numDays = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0).getDate();
-  const allData = loadAll();
+  const allData = uncoverArchive();
 
   for(let i=0; i<firstDay; i++) { grid.appendChild(document.createElement('div')); }
   for(let day=1; day<=numDays; day++) {
@@ -1035,15 +998,14 @@ function renderCalendar() {
     cell.className = 'cal-cell'; cell.textContent = day;
     const thisKey = `${calDate.getFullYear()}.${String(calDate.getMonth()+1).padStart(2,'0')}.${String(day).padStart(2,'0')}`;
     
-    if (allData[thisKey] && allData[thisKey].items && allData[thisKey].items.length > 0) cell.classList.add('has-data');
-    if (thisKey === currentKey) cell.classList.add('current');
+    if (allData[thisKey] && allData[thisKey].glyphs && allData[thisKey].glyphs.length > 0) cell.classList.add('has-data');
+    if (thisKey === activeDate) cell.classList.add('current');
     
-    cell.addEventListener('click', e => { e.stopPropagation(); switchDay(thisKey); });
+    cell.addEventListener('click', e => { e.stopPropagation(); flipTo(thisKey); });
     grid.appendChild(cell);
   }
 }
 
-// ===== トースト表示 ＆ Undoトリガー =====
 function showToast(msg, showUndo = false) {
   const t = document.getElementById('toast');
   document.getElementById('toast-text').textContent = msg;
@@ -1052,9 +1014,8 @@ function showToast(msg, showUndo = false) {
   clearTimeout(t._timer); t._timer = setTimeout(hideToast, 4000);
 }
 function hideToast() { document.getElementById('toast').classList.remove('show'); }
-document.getElementById('toast-undo-btn').addEventListener('click', triggerUndo);
+document.getElementById('toast-undo-btn').addEventListener('click', rescueScrap);
 
-// ===== ドロワー =====
 function openDrawer()  {
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer-overlay').classList.add('open');
@@ -1068,7 +1029,6 @@ document.getElementById('menu-btn').addEventListener('click', openDrawer);
 document.getElementById('drawer-close').addEventListener('click', closeDrawer);
 document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
 
-// ===== ダウンロードヘルパー =====
 function downloadText(filename, content, mime) {
   const blob = new Blob([content], { type: mime + ';charset=utf-8' });
   const url  = URL.createObjectURL(blob);
@@ -1078,12 +1038,11 @@ function downloadText(filename, content, mime) {
   setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
 }
 
-// ===== エクスポート =====
 document.getElementById('btn-export-json').addEventListener('click', () => {
   closeDrawer();
   setTimeout(() => {
-    const all = loadAll();
-    downloadText('jot_backup_' + currentKey.replace(/\./g, '') + '.json', JSON.stringify(all, null, 2), 'application/json');
+    const all = uncoverArchive();
+    downloadText('jot_backup_' + activeDate.replace(/\./g, '') + '.json', JSON.stringify(all, null, 2), 'application/json');
     showToast('JSONをエクスポートしました');
   }, 300);
 });
@@ -1091,25 +1050,24 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
 document.getElementById('btn-export-txt').addEventListener('click', () => {
   closeDrawer();
   setTimeout(() => {
-    const all = loadAll();
+    const all = uncoverArchive();
     const keys = Object.keys(all).sort().reverse();
     let text = '';
     keys.forEach(key => {
       const pg = all[key];
       text += '===== ' + key + ' =====\n';
-      (pg.items || []).forEach(it => {
+      (pg.glyphs || []).forEach(it => {
         if (it.type === 'heading') text += '\n' + it.text.replace(/^#\s*/, '').toUpperCase() + '\n';
         else if (it.type === 'memo') text += '  ' + it.text.replace(/^-\s*/, '') + '\n';
         else text += (it.checked ? '☑' : '□') + ' ' + it.text + '\n';
       });
       text += '\n';
     });
-    downloadText('jot_' + currentKey.replace(/\./g, '') + '.txt', text, 'text/plain');
+    downloadText('jot_' + activeDate.replace(/\./g, '') + '.txt', text, 'text/plain');
     showToast('テキストをエクスポートしました');
   }, 300);
 });
 
-// ===== インポート =====
 document.getElementById('btn-import').addEventListener('click', () => {
   closeDrawer();
   setTimeout(() => { document.getElementById('import-input').click(); }, 300);
@@ -1125,8 +1083,8 @@ document.getElementById('import-input').addEventListener('change', function() {
       if (typeof data !== 'object' || Array.isArray(data) || data === null) throw new Error();
       const validKeys = Object.keys(data).filter(k => /^\d{4}\.\d{2}\.\d{2}$/.test(k));
       if (validKeys.length === 0) throw new Error();
-      saveAll(Object.assign({}, loadAll(), data));
-      switchDay(currentKey);
+      saveAll(Object.assign({}, uncoverArchive(), data));
+      flipTo(activeDate);
       showToast('インポート完了 — ' + validKeys.length + ' 日分');
     } catch {
       showToast('読み込み失敗：正しいJSONファイルか確認してください');
@@ -1136,23 +1094,23 @@ document.getElementById('import-input').addEventListener('change', function() {
   reader.readAsText(file);
 });
 
-// ===== 0時リロード =====
-function scheduleNextDay() {
+// 静かな改ページ判定（深夜リロード処理）
+function midnightRollover() {
   const now = new Date();
   const next = new Date(now);
   next.setDate(next.getDate() + 1); next.setHours(0, 0, 1, 0);
   setTimeout(() => location.reload(), next - now);
 }
 
-// ===== 起動 =====
+// 起動
 const today = getTodayKey();
-maybeCarryOver(today);
-switchDay(today);
-focusNewInput();
-scheduleNextDay();
+shiftLeftovers(today);
+flipTo(today);
+dipNib();
+midnightRollover();
 
-if (page.items.some(it => it.carriedFrom)) {
-  const n = page.items.filter(it => it.carriedFrom).length;
+if (scroll.glyphs.some(it => it.carriedFrom)) {
+  const n = scroll.glyphs.filter(it => it.carriedFrom).length;
   setTimeout(() => showToast(`昨日の未完了を ${n} 件引き継ぎました`), 600);
 }
 </script>
