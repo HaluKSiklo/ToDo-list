@@ -428,11 +428,12 @@ function loadPage(key) { const a = loadAll(); return a[key] || { items: [] }; }
 function savePage(key, pg) { const a = loadAll(); a[key] = pg; saveAll(a); }
 function uid() { return Math.random().toString(36).slice(2,10); }
 
-// ===== タイプライター効果音エンジン ＆ 各種ブラウザ・Braveセキュリティ対策 =====
+// ===== 暴走タイプライター音響エンジン（Brave・各ブラウザ完全覚醒仕様） =====
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
+// 超粗削りな鉄くずの摩擦ノイズ（アタックの鋭さ用）
 function createNoiseBuffer() {
-  const bufferSize = audioCtx.sampleRate * 0.1;
+  const bufferSize = audioCtx.sampleRate * 0.15;
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
@@ -440,11 +441,8 @@ function createNoiseBuffer() {
 }
 const noiseBuffer = createNoiseBuffer();
 
-// ユーザーが何かしらのアクションを起こした瞬間にオーディオのロックを強制解除する関数
 function unlockAudio() {
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
+  if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 }
 window.addEventListener('click', unlockAudio);
 window.addEventListener('touchstart', unlockAudio);
@@ -454,62 +452,101 @@ function playRetroSound(type) {
   unlockAudio();
   const now = audioCtx.currentTime;
 
-  function playKeyClick(pitch, volume, noiseMix) {
+  // 金属が激しく衝突する打鍵音（激しい荒々しさを再現）
+  function playWildClick(basePitch, volume, noiseMix, duration, isSpace = false) {
+    // 毎回ピッチを狂わせる（アナログバネの個体差・不完全さ）
+    const detune = (Math.random() * 2 - 1) * (isSpace ? 25 : 60);
+    const finalPitch = Math.max(40, basePitch + detune);
+
     const osc = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator(); // 厚みを出すセカンドオシレーター
     const oscGain = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(pitch, now);
-    osc.frequency.exponentialRampToValueAtTime(pitch * 0.5, now + 0.03);
-    oscGain.gain.setValueAtTime(volume, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+    // 荒々しい三角波と矩形波のハイブリッド
+    osc.type = isSpace ? 'sawtooth' : 'triangle';
+    osc2.type = 'square';
+
+    osc.frequency.setValueAtTime(finalPitch, now);
+    osc.frequency.exponentialRampToValueAtTime(finalPitch * (isSpace ? 0.3 : 0.4), now + duration);
+
+    osc2.frequency.setValueAtTime(finalPitch * 1.5, now);
+    osc2.frequency.exponentialRampToValueAtTime(finalPitch * 0.7, now + 0.01);
+
+    // 強烈なアタック（鉄がガツッとぶつかる瞬間）
+    const randVol = volume * (0.85 + Math.random() * 0.3); // 音量も毎回狂わせる
+    oscGain.gain.setValueAtTime(randVol, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
     
+    // 激しい金属摩擦音（ホワイトノイズ）
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
-    noiseGain.gain.setValueAtTime(volume * noiseMix, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+    
+    noiseGain.gain.setValueAtTime(randVol * noiseMix, now);
+    // 瞬時に減衰させて「カキッ」という打撃感に変える
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
 
-    osc.connect(oscGain); oscGain.connect(audioCtx.destination);
-    noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+    // 接続
+    osc.connect(oscGain);
+    osc2.connect(oscGain);
+    oscGain.connect(audioCtx.destination);
+    
+    noise.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
 
-    osc.start(now); osc.stop(now + 0.04);
-    noise.start(now); noise.stop(now + 0.03);
+    // 激しく発音スタート
+    osc.start(now); osc.stop(now + duration + 0.01);
+    osc2.start(now); osc2.stop(now + 0.02);
+    noise.start(now); noise.stop(now + 0.02);
   }
 
   switch (type) {
-    case 'type': // 通常文字入力: リアルなパチッ
-      const randomPitch = 320 + Math.random() * 80; // 毎回ピッチを少し変えてアナログ感を演出
-      playKeyClick(randomPitch, 0.05, 1.2);
+    case 'type': // 通常のキー：パチッ、カシャッ、ガタッ（毎回狂うピッチ）
+      const randomBase = 350 + Math.random() * 120;
+      playWildClick(randomBase, 0.18, 2.5, 0.035);
       break;
 
-    case 'space': // スペースキー: 低く鈍いコトッ
-      playKeyClick(160, 0.08, 0.8);
+    case 'space': // スペースバー：ズドォン！と重い鉄の跳ね返り
+      playWildClick(100, 0.28, 1.8, 0.08, true);
       break;
 
-    case 'add': // 新規Enter改行: タイプライターの「チーン！」ベル音
-      [880, 1200].forEach((freq, idx) => {
+    case 'add': // 新規決定Enter：「ゴトォン！チィィィーーーン！！」
+      // 鉄のフレームがぶつかる重低音
+      playWildClick(80, 0.35, 3.0, 0.15, true);
+      
+      // 複数の金属の共鳴（不完全で美しいベルの和音）
+      const bellFreqs = [880, 1318.5, 1760, 2200];
+      bellFreqs.forEach((freq, idx) => {
         const bell = audioCtx.createOscillator();
         const bellGain = audioCtx.createGain();
+        // わずかにベルのピッチを狂わせてリアリティを出す
+        const bellDetune = (Math.random() * 2 - 1) * 8;
+        
         bell.type = 'sine';
-        bell.frequency.setValueAtTime(freq, now);
-        bellGain.gain.setValueAtTime(idx === 0 ? 0.08 : 0.04, now);
-        bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-        bell.connect(bellGain); bellGain.connect(audioCtx.destination);
-        bell.start(now); bell.stop(now + 0.4);
+        bell.frequency.setValueAtTime(freq + bellDetune, now);
+        
+        // 最初の高音ベルを強烈に、残りを美しい余韻に
+        const bVol = idx === 0 ? 0.15 : 0.05;
+        bellGain.gain.setValueAtTime(bVol, now);
+        bellGain.gain.exponentialRampToValueAtTime(0.0005, now + 0.55);
+        
+        bell.connect(bellGain);
+        bellGain.connect(audioCtx.destination);
+        bell.start(now);
+        bell.stop(now + 0.6);
       });
-      playKeyClick(120, 0.15, 1.8); // 重厚なキャリッジ作動音を重ねる
       break;
 
-    case 'check-done': // チェックオン: 噛み合うような高めのカシャッ
-      playKeyClick(280, 0.12, 1.2);
+    case 'check-done': // チェックオン：金属がガチッと噛み合う
+      playWildClick(440, 0.22, 2.0, 0.04);
       break;
 
-    case 'check-undone': // チェックオフ: 低めのコトッ
-      playKeyClick(180, 0.1, 0.6);
+    case 'check-undone': // チェックオフ：バネが外れる鈍い音
+      playWildClick(180, 0.18, 1.2, 0.06);
       break;
 
-    case 'delete': // 削除: 軽めのカタッ
-      playKeyClick(220, 0.08, 1.0);
+    case 'delete': // 削除（Backspace）：ガタッ！とパーツが戻る音
+      playWildClick(200, 0.20, 2.2, 0.045);
       break;
   }
 }
@@ -602,7 +639,6 @@ function renderItems() {
         page.items[idx].checked = cb.checked;
         savePage(todayKey, page);
         li.classList.toggle('done', cb.checked);
-        // 音を鳴らす
         playRetroSound(cb.checked ? 'check-done' : 'check-undone');
         updateProgress();
       });
@@ -620,7 +656,7 @@ function renderItems() {
       savePage(todayKey, page);
     });
     span.addEventListener('keydown', e => {
-      // タイピング毎のパチパチ音（制御系のキーや修飾キーつきの入力は除外）
+      // 暴走タイピング音（矢印キーやCtrlキーなどは除外）
       if (e.key !== 'Enter' && e.key !== 'Backspace' && !e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
         if (e.key === ' ') {
           playRetroSound('space');
@@ -637,7 +673,7 @@ function renderItems() {
         page.items.splice(idx, 1);
         savePage(todayKey, page);
         renderItems(); 
-        playRetroSound('delete'); // 削除音
+        playRetroSound('delete');
         updateProgress();
         const els = document.querySelectorAll('.item-text');
         if (els.length > 0) {
@@ -696,7 +732,7 @@ function focusNewInput() {
 }
 
 newInput.addEventListener('keydown', e => {
-  // タイピング毎のパチパチ音（制御系のキーや修飾キーつきの入力は除外）
+  // 暴走タイピング音（矢印キーやCtrlキーなどは除外）
   if (e.key !== 'Enter' && e.key !== 'Backspace' && !e.key.startsWith('Arrow') && !e.ctrlKey && !e.metaKey) {
     if (e.key === ' ') {
       playRetroSound('space');
@@ -713,11 +749,11 @@ newInput.addEventListener('keydown', e => {
     savePage(todayKey, page);
     newInput.value = '';
     renderItems();
-    playRetroSound('add'); // 改行＆ベル音
+    playRetroSound('add'); // 豪快な改行＆ベル音
   }
   if (e.key === 'Backspace' && newInput.value === '' && page.items.length > 0) {
     e.preventDefault();
-    playRetroSound('delete'); // 空行でBackspaceを押した時の音
+    playRetroSound('delete');
     const els = document.querySelectorAll('.item-text');
     if (els.length > 0) {
       const last = els[els.length-1]; last.focus();
