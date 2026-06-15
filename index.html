@@ -112,7 +112,6 @@
     transition: opacity 0.15s, background-color 0.15s;
   }
   
-  /* ドラッグ中のスタイル指定 */
   .item.dragging { opacity: 0.3; background-color: #fafafa; }
   .item.drag-over { border-top: 2px solid var(--text-main); }
 
@@ -430,11 +429,11 @@ function loadPage(key) { const a = loadAll(); return a[key] || { items: [] }; }
 function savePage(key, pg) { const a = loadAll(); a[key] = pg; saveAll(a); }
 function uid() { return Math.random().toString(36).slice(2,10); }
 
-// ===== 💻 Surface純正キーボード立体音響合成エンジン =====
+// ===== 💻 クラシック・タイプライター音響合成エンジン =====
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function createHeavyNoise() {
-  const bufferSize = audioCtx.sampleRate * 0.3; 
+  const bufferSize = audioCtx.sampleRate * 0.4; 
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
@@ -442,17 +441,12 @@ function createHeavyNoise() {
 }
 const noiseBuffer = createHeavyNoise();
 
-// Surface Pro Type Cover / Surface Laptop の物理配列実測マッピング (-1.0=左端, 1.0=右端)
+// キー配列による音の左右定位マッピング
 const surfaceKeyPanMap = {
-  // 1段目
   '1':-0.84, '2':-0.71, '3':-0.58, '4':-0.45, '5':-0.32, '6':-0.19, '7':-0.06, '8':0.07, '9':0.20, '0':0.33, '-':0.46, '^':0.59, '¥':0.72, 'Backspace':0.90,
-  // 2段目
   'q':-0.80, 'w':-0.67, 'e':-0.54, 'r':-0.41, 't':-0.28, 'y':-0.15, 'u':-0.02, 'i':0.11, 'o':0.24, 'p':0.37, '@':0.50, '[':0.63, 'Enter':0.88,
-  // 3段目
   'a':-0.76, 's':-0.63, 'd':-0.50, 'f':-0.37, 'g':-0.24, 'h':-0.11, 'j':0.02, 'k':0.15, 'l':0.28, ';':0.41, ':':0.54, ']':0.67,
-  // 4段目
   'z':-0.70, 'x':-0.57, 'c':-0.44, 'v':-0.31, 'b':-0.18, 'n':-0.05, 'm':0.08, ',':0.21, '.':0.34, '/':0.47, '_':0.60,
-  // 特殊
   ' ': 0.00
 };
 
@@ -461,7 +455,7 @@ function getSurfacePan(key) {
   if (surfaceKeyPanMap[key] !== undefined) return surfaceKeyPanMap[key];
   const upper = key.toUpperCase();
   if (surfaceKeyPanMap[upper] !== undefined) return surfaceKeyPanMap[upper];
-  return (Math.random() * 2 - 1) * 0.15; // マップに無いキーは微細な中央ランダム
+  return (Math.random() * 2 - 1) * 0.2;
 }
 
 function unlockAudio() {
@@ -476,80 +470,84 @@ function playSurfaceSound(type, keyName = '') {
   const now = audioCtx.currentTime;
 
   const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-  const targetPan = (type === 'space') ? 0.0 : getSurfacePan(keyName);
+  const targetPan = (type === 'space') ? 0.0 : (type === 'check' ? -0.65 : getSurfacePan(keyName));
   
-  if (panner) {
-    panner.pan.setValueAtTime(targetPan, now);
-  }
+  if (panner) { panner.pan.setValueAtTime(targetPan, now); }
 
-  // 物理キー位置による音響減衰シミュレーション
+  // アナログ筐体の低音共振と高域特性をシミュレート
   const filter = audioCtx.createBiquadFilter();
-  filter.type = 'lowpass';
-  const panAbs = Math.abs(targetPan);
-  // キーが端に行くほど高音域がわずかに遮蔽される特性を再現
-  const cutoffFreq = 4200 - (panAbs * 1500) + (Math.random() * 200);
-  filter.frequency.setValueAtTime(cutoffFreq, now);
-  filter.Q.setValueAtTime(1.2 + (panAbs * 2.0), now);
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(type === 'add' ? 1200 : 900 + (Math.random() * 300), now);
+  filter.Q.setValueAtTime(type === 'add' ? 0.8 : 2.5, now);
 
-  if (panner) {
-    filter.connect(panner);
-    panner.connect(audioCtx.destination);
-  } else {
-    filter.connect(audioCtx.destination);
-  }
+  if (panner) { filter.connect(panner); panner.connect(audioCtx.destination); }
+  else { filter.connect(audioCtx.destination); }
 
-  // アナログタイピング音の合成
-  function synthClick(baseFreq, volume, noiseMix, duration, isSpace = false, isDelete = false) {
-    const jitter = (Math.random() * 2 - 1) * (isSpace ? 20 : (isDelete ? 40 : 60));
-    const frequency = Math.max(40, baseFreq + jitter);
-    const dynamicVol = volume * (0.85 + Math.random() * 0.3);
+  // 新・メカニカル物理音響合成ロジック
+  function synthMechanicalClick(baseFreq, volume, noiseMix, duration, typePattern) {
+    const jitter = (Math.random() * 2 - 1) * 40;
+    const freq = baseFreq + jitter;
+    const dynVol = volume * (0.8 + Math.random() * 0.4);
 
-    // 1. パンタグラフの打鍵衝撃波（アタック）
+    // 1. 金属アームがリボン・紙を叩くインパクト音 (強い高周波アタック)
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
-    osc1.type = isSpace ? 'triangle' : 'sine';
-    osc1.frequency.setValueAtTime(frequency, now);
-    osc1.frequency.exponentialRampToValueAtTime(frequency * 0.4, now + duration);
-    gain1.gain.setValueAtTime(dynamicVol, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(freq * 1.8, now);
+    osc1.frequency.exponentialRampToValueAtTime(freq * 0.5, now + duration);
+    gain1.gain.setValueAtTime(dynVol, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
 
-    // 2. 底打ちの金属反響高周波成分
+    // 2. 内部レバーのガチャリという金属反響音
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
     osc2.type = 'square';
-    osc2.frequency.setValueAtTime(frequency * 2.4, now);
-    osc2.frequency.exponentialRampToValueAtTime(frequency * 0.8, now + 0.01);
-    gain2.gain.setValueAtTime(dynamicVol * 0.3, now);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+    osc2.frequency.setValueAtTime(freq * 0.8, now);
+    gain2.gain.setValueAtTime(dynVol * 0.4, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    // 3. Surface特有の静音性キートップ擦れ音（ホワイトノイズ）
+    // 3. 原紙を鋭く打つ高摩擦の破裂ノイズ
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
-    noiseGain.gain.setValueAtTime(dynamicVol * noiseMix, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.8);
+    noiseGain.gain.setValueAtTime(dynVol * noiseMix, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.7);
 
     osc1.connect(gain1); gain1.connect(filter);
     osc2.connect(gain2); gain2.connect(filter);
     noise.connect(noiseGain); noiseGain.connect(filter);
 
-    osc1.start(now); osc1.stop(now + duration + 0.01);
-    osc2.start(now); osc2.stop(now + 0.02);
-    noise.start(now); noise.stop(now + duration + 0.01);
+    osc1.start(now); osc1.stop(now + duration + 0.02);
+    osc2.start(now); osc2.stop(now + duration + 0.02);
+    noise.start(now); noise.stop(now + duration + 0.02);
   }
 
   switch (type) {
-    case 'type': 
-      synthClick(380, 0.28, 2.2, 0.04);
+    case 'type': // パチン！と快快に響くキー打鍵
+      synthMechanicalClick(320, 0.45, 3.8, 0.06, 'key');
       break;
-    case 'space': 
-      synthClick(120, 0.45, 1.8, 0.09, true);
+    case 'space': // トンッ！と少し太く抜けるスペースバー
+      synthMechanicalClick(180, 0.55, 2.5, 0.10, 'space');
       break;
-    case 'add': // Enterキー押下時
-      synthClick(240, 0.40, 3.0, 0.12, false);
+    case 'add': // チンッ！ガラガラ…という爽快なキャリッジリターン（改行）
+      // ① ベルの「チンッ！」音
+      const bellOsc = audioCtx.createOscillator();
+      const bellGain = audioCtx.createGain();
+      bellOsc.type = 'sine';
+      bellOsc.frequency.setValueAtTime(2100, now); // 高いベルの金属音
+      bellGain.gain.setValueAtTime(0.35, now);
+      bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      bellOsc.connect(bellGain); bellGain.connect(audioCtx.destination);
+      bellOsc.start(now); bellOsc.stop(now + 0.2);
+
+      // ② 紙送り台が滑る「ガシャッ」音
+      synthMechanicalClick(140, 0.60, 4.5, 0.18, 'return');
       break;
-    case 'delete': 
-      synthClick(180, 0.35, 2.5, 0.06, false, true);
+    case 'delete': // ガチャッという少し重たいバックスペース音
+      synthMechanicalClick(220, 0.40, 3.0, 0.08, 'delete');
+      break;
+    case 'check': // カチリと決まるラッチ・トグルスイッチ音
+      synthMechanicalClick(480, 0.42, 1.5, 0.05, 'check');
       break;
   }
 }
@@ -639,6 +637,7 @@ function renderItems() {
       const cb = document.createElement('input');
       cb.type = 'checkbox'; cb.className = 'checkbox'; cb.checked = item.checked;
       cb.addEventListener('change', () => {
+        playSurfaceSound('check');
         page.items[idx].checked = cb.checked;
         savePage(todayKey, page);
         li.classList.toggle('done', cb.checked);
@@ -697,12 +696,11 @@ function renderItems() {
       li.appendChild(b);
     }
 
-    // ===== 🛠️ ドラッグ＆ドロップ並び替え実装箇所の修正 =====
+    // ドラッグ＆ドロップ並び替えシステム
     li.draggable = true;
     
     li.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
-      // インデックス型を確実に文字列データとして格納
       e.dataTransfer.setData('text/plain', String(idx));
       setTimeout(() => li.classList.add('dragging'), 0);
     });
@@ -713,7 +711,7 @@ function renderItems() {
     });
     
     li.addEventListener('dragover', e => {
-      e.preventDefault(); // ドロップ許可に必須
+      e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       if (!li.classList.contains('dragging')) {
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
@@ -735,7 +733,6 @@ function renderItems() {
       const from = parseInt(fromIndexStr, 10);
       if (isNaN(from) || from === idx) return;
       
-      // データ構造の並び替え処理
       const moved = page.items.splice(from, 1)[0];
       page.items.splice(idx, 0, moved);
       
