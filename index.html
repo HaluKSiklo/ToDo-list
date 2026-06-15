@@ -28,19 +28,81 @@
     --kbd-bg: #F0EFE9;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --line-color: #2C2C2A;
-      --text-main: #E3E3E1;
-      --text-sub: #70706B;
-      --text-heading: #A1A19B;
-      --check-border: #4A4A47;
-      --check-done: #5A5A56;
-      --carry-bg: #222220;
-      --carry-text: #70706B;
-      --bg-main: #141413;
-      --kbd-bg: #2C2C2A;
-    }
+  /* 部屋の明かりを完全に遮断したときの煤けた外套 */
+  body.dark-mode {
+    --line-color: #2C2C2A;
+    --text-main: #E3E3E1;
+    --text-sub: #70706B;
+    --text-heading: #A1A19B;
+    --check-border: #4A4A47;
+    --check-done: #5A5A56;
+    --carry-bg: #222220;
+    --carry-text: #70706B;
+    --bg-main: #141413;
+    --kbd-bg: #2C2C2A;
+  }
+
+  /* 経年変化で黄ばんだ羊皮紙 */
+  body.analog-active {
+    --bg-main: #f3eedb;
+    --text-main: #2b261f;
+    --text-sub: #8c7e6c;
+    --line-color: #dfd5be;
+    --text-heading: #5c4d3c;
+    --check-border: #9e8e6d;
+    --check-done: #b8ab8d;
+    --carry-bg: #eae3cb;
+    --kbd-bg: #eae3cb;
+  }
+
+  /* 深夜にひっそりと灯すセピアヴィンテージ */
+  body.analog-active.dark-mode {
+    --bg-main: #1d1914;
+    --text-main: #e8dcc4;
+    --text-sub: #7d6f5c;
+    --line-color: #2d2620;
+    --text-heading: #ad9a84;
+    --check-border: #524436;
+    --check-done: #5c4d3e;
+    --carry-bg: #26211a;
+    --kbd-bg: #26211a;
+  }
+
+  /* 📟 赤リボン装填：深みと掠れのある赤インクカラー */
+  body.ribbon-red {
+    --text-main: #a33838;
+    --text-heading: #7c2424;
+  }
+  body.dark-mode.ribbon-red {
+    --text-main: #e06c6c;
+    --text-heading: #ff8282;
+  }
+  body.analog-active.ribbon-red {
+    --text-main: #942f2f;
+    --text-heading: #6e1d1d;
+  }
+  body.analog-active.dark-mode.ribbon-red {
+    --text-main: #f28585;
+    --text-heading: #ff9494;
+  }
+
+  body.analog-active,
+  body.analog-active .line-ink,
+  body.analog-active #feed-well {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-weight: bold;
+    letter-spacing: -0.02em;
+    text-shadow: 0.3px 0.3px 1px rgba(43, 38, 31, 0.45);
+  }
+
+  body.analog-active.ribbon-red,
+  body.analog-active.ribbon-red .line-ink,
+  body.analog-active.ribbon-red #feed-well {
+    text-shadow: 0.3px 0.3px 1px rgba(163, 56, 56, 0.45);
+  }
+
+  body.analog-active .paper-line {
+    filter: contrast(1.05) brightness(0.98);
   }
 
   html, body {
@@ -51,7 +113,8 @@
     font-size: 15px;
     line-height: var(--line-h);
     -webkit-font-smoothing: antialiased;
-    transition: background 0.3s, color 0.3s;
+    transition: background 0.35s, color 0.35s;
+    overflow-x: hidden;
   }
 
   #progress-bar-wrap {
@@ -169,7 +232,6 @@
     transition: opacity 0.15s, background-color 0.15s;
   }
   
-  /* 紙を浮かせてちぎるような手触り */
   .paper-line.weightless { opacity: 0.3; background-color: var(--carry-bg); }
   .paper-line.crease { border-top: 2px solid var(--text-main); }
 
@@ -303,6 +365,19 @@
   }
   #brand:hover { color: var(--text-sub); }
 
+  #theme-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 4px; display: flex; align-items: center; justify-content: center;
+    opacity: 0.3; transition: opacity 0.2s;
+    color: var(--text-main);
+  }
+  #theme-btn:hover { opacity: 0.7; }
+  
+  body:not(.dark-mode) .sun-icon { display: block !important; }
+  body:not(.dark-mode) .moon-icon { display: none !important; }
+  body.dark-mode .sun-icon { display: none !important; }
+  body.dark-mode .moon-icon { display: block !important; }
+
   #menu-btn {
     background: none; border: none; cursor: pointer;
     padding: 4px; display: flex; flex-direction: column;
@@ -368,20 +443,6 @@
 
   #import-input { display: none; }
 
-  #hint {
-    position: fixed; bottom: 24px; right: 28px;
-    font-size: 11px; color: var(--text-sub);
-    letter-spacing: 0.04em; line-height: 1.8;
-    text-align: right; pointer-events: none;
-    opacity: 0; transition: opacity 0.4s; user-select: none;
-  }
-  #hint.visible { opacity: 1; }
-  #hint kbd {
-    font-family: inherit; font-size: 10px;
-    background: var(--kbd-bg); border-radius: 3px;
-    padding: 1px 5px; color: var(--text-heading);
-  }
-
   #toast {
     position: fixed; bottom: 28px; left: 50%;
     transform: translateX(-50%) translateY(8px);
@@ -405,7 +466,6 @@
 
   @media (max-width: 600px) {
     :root { --page-l: 40px; --page-r: 24px; --page-t: 44px; }
-    #hint { display: none; }
     #drawer { width: 240px; }
   }
 </style>
@@ -417,12 +477,16 @@
 
 <div id="topbar">
   <span id="brand">jot</span>
+  <!-- 手動テーマ切り替え -->
+  <button id="theme-btn" title="明暗切り替え" aria-label="テーマを切り替える">
+    <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
   <button id="menu-btn" title="メニュー" aria-label="メニューを開く">
     <span></span><span></span><span></span>
   </button>
 </div>
 
-<!-- ドロワー -->
 <div id="drawer-overlay"></div>
 <div id="drawer" role="dialog" aria-label="メニュー">
   <button id="drawer-close" aria-label="閉じる">✕</button>
@@ -462,7 +526,6 @@
     <button class="date-nav-btn" id="btn-prev-day">◀</button>
     <div id="date-label"></div>
     <button class="date-nav-btn" id="btn-next-day">▶</button>
-    <!-- カレンダーポップアップ -->
     <div id="calendar-picker">
       <div class="cal-header">
         <button id="cal-prev-month" style="background:none;border:none;cursor:pointer;color:inherit;">◀</button>
@@ -480,20 +543,16 @@
   </div>
 </div>
 
-<div id="hint">
-  <kbd>#</kbd> 見出し &nbsp; <kbd>-</kbd> メモ &nbsp; <kbd>↑↓</kbd> 移動 &nbsp; <kbd>Ctrl+Z</kbd> Undo
-</div>
 <div id="toast">
   <span id="toast-text"></span>
   <button id="toast-undo-btn">元に戻す</button>
 </div>
 
 <script>
-// ローカル環境との対話経路
 const ARCHIVE_BOX = 'jot_pages';
 let activeDate = getTodayKey();
 let scroll = { glyphs: [] };
-let scrapPaper = null; // 誤って引きちぎった行の救出バッファ
+let scrapPaper = null;
 
 function formatDateKey(date) {
   return `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}`;
@@ -505,7 +564,6 @@ function readScroll(key) { const a = uncoverArchive(); return a[key] || { glyphs
 function writeScroll(key, sc) { const a = uncoverArchive(); a[key] = sc; sealArchive(a); }
 function uid() { return Math.random().toString(36).slice(2,10); }
 
-// どうしてもBraveやiOSが音を眠らせたがるから、強引に叩き起こすおまじない
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function createHeavyNoise() {
@@ -517,21 +575,37 @@ function createHeavyNoise() {
 }
 const noiseBuffer = createHeavyNoise();
 
-// Surface Type Cover の物理キートップ位置比率。ミリ単位の実測値をそのままブチ込んだ
-const surfaceKeyPanMap = {
-  '1':-0.84, '2':-0.71, '3':-0.58, '4':-0.45, '5':-0.32, '6':-0.19, '7':-0.06, '8':0.07, '9':0.20, '0':0.33, '-':0.46, '^':0.59, '¥':0.72, 'Backspace':0.90,
+// Windowsの各種ブラウザ向けにキー判定を極限まで補正 (JIS配列ベース)
+const surfaceKeyXMap = {
+  '1':-0.84, '2':-0.71, '3':-0.58, '4':-0.45, '5':-0.32, '6':-0.19, '7':-0.06, '8':0.07, '9':0.20, '0':0.33, '-':0.46, '^':0.59, '¥':0.72, '\\':0.72, 'Backspace':0.90,
   'q':-0.80, 'w':-0.67, 'e':-0.54, 'r':-0.41, 't':-0.28, 'y':-0.15, 'u':-0.02, 'i':0.11, 'o':0.24, 'p':0.37, '@':0.50, '[':0.63, 'Enter':0.88,
   'a':-0.76, 's':-0.63, 'd':-0.50, 'f':-0.37, 'g':-0.24, 'h':-0.11, 'j':0.02, 'k':0.15, 'l':0.28, ';':0.41, ':':0.54, ']':0.67,
   'z':-0.70, 'x':-0.57, 'c':-0.44, 'v':-0.31, 'b':-0.18, 'n':-0.05, 'm':0.08, ',':0.21, '.':0.34, '/':0.47, '_':0.60,
   ' ': 0.00
 };
 
-function getKeyPan(key) {
+const surfaceKeyZMap = {
+  '1':-0.32, '2':-0.32, '3':-0.32, '4':-0.32, '5':-0.32, '6':-0.32, '7':-0.32, '8':-0.32, '9':-0.32, '0':-0.32, '-':-0.32, '^':-0.32, '¥':-0.32, '\\':-0.32, 'Backspace':-0.32,
+  'q':-0.27, 'w':-0.27, 'e':-0.27, 'r':-0.27, 't':-0.27, 'y':-0.27, 'u':-0.27, 'i':-0.27, 'o':-0.27, 'p':-0.27, '@':-0.27, '[':-0.27, 'Enter':-0.27,
+  'a':-0.22, 's':-0.22, 'd':-0.22, 'f':-0.22, 'g':-0.22, 'h':-0.22, 'j':-0.22, 'k':-0.22, 'l':-0.22, ';':-0.22, ':':-0.22, ']':-0.22,
+  'z':-0.17, 'x':-0.17, 'c':-0.17, 'v':-0.17, 'b':-0.17, 'n':-0.17, 'm':-0.17, ',':-0.17, '.':-0.17, '/':-0.17, '_':-0.17,
+  ' ': -0.12
+};
+
+function getKeyX(key) {
   if (!key) return 0;
-  if (surfaceKeyPanMap[key] !== undefined) return surfaceKeyPanMap[key];
+  if (surfaceKeyXMap[key] !== undefined) return surfaceKeyXMap[key];
   const upper = key.toUpperCase();
-  if (surfaceKeyPanMap[upper] !== undefined) return surfaceKeyPanMap[upper];
+  if (surfaceKeyXMap[upper] !== undefined) return surfaceKeyXMap[upper];
   return (Math.random() * 2 - 1) * 0.15;
+}
+
+function getKeyZ(key) {
+  if (!key) return -0.22;
+  if (surfaceKeyZMap[key] !== undefined) return surfaceKeyZMap[key];
+  const upper = key.toUpperCase();
+  if (surfaceKeyZMap[upper] !== undefined) return surfaceKeyZMap[upper];
+  return -0.22;
 }
 
 function unlockAudio() {
@@ -545,28 +619,88 @@ function clack(type, keyName = '') {
   unlockAudio();
   const now = audioCtx.currentTime;
 
-  const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-  const targetPan = (type === 'space') ? 0.0 : (type === 'check' ? -0.65 : getKeyPan(keyName));
-  
-  if (panner) { panner.pan.setValueAtTime(targetPan, now); }
+  // HRTF立体空間音響モデル
+  const panner = audioCtx.createPanner();
+  panner.panningModel = 'HRTF';
+  panner.distanceModel = 'inverse';
+  panner.refDistance = 0.12;
+  panner.maxDistance = 5;
+  panner.rolloffFactor = 1.3;
 
-  // 筐体の金属共振フィルタ。Q値を高めにしてアナログ特有の耳障りな共鳴をあえて残す
+  let targetX = 0;
+  let targetY = -0.15; 
+  let targetZ = -0.22;
+
+  if (type === 'space') {
+    targetX = 0.0;
+    targetZ = -0.12;
+  } else if (type === 'check') {
+    targetX = -0.12; 
+    targetZ = -0.22;
+  } else {
+    targetX = getKeyX(keyName) * 0.15; 
+    targetZ = getKeyZ(keyName);
+  }
+
+  // 古いSafari等ブラウザへの互換性フォールバック
+  if (panner.positionX) {
+    panner.positionX.setValueAtTime(targetX, now);
+    panner.positionY.setValueAtTime(targetY, now);
+    panner.positionZ.setValueAtTime(targetZ, now);
+  } else if (panner.setPosition) {
+    panner.setPosition(targetX, targetY, targetZ);
+  }
+
+  const distFactor = Math.abs(targetZ); 
+  const maxZ = 0.32;
+  const depthRatio = distFactor / maxZ; 
+
   const filter = audioCtx.createBiquadFilter();
   filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(type === 'add' ? 1200 : 900 + (Math.random() * 300), now);
+  const centerFreq = (type === 'add') ? 1200 : (1100 - (depthRatio * 350)) + (Math.random() * 200);
+  filter.frequency.setValueAtTime(centerFreq, now);
   filter.Q.setValueAtTime(type === 'add' ? 0.8 : 2.5, now);
 
-  if (panner) { filter.connect(panner); panner.connect(audioCtx.destination); }
-  else { filter.connect(audioCtx.destination); }
+  const distanceGain = audioCtx.createGain();
+  const volumeMultiplier = 1.0 - (depthRatio * 0.25); 
+  distanceGain.gain.setValueAtTime(volumeMultiplier, now);
 
-  function strikeMetal(baseFreq, volume, noiseMix, duration) {
-    const jitter = (Math.random() * 2 - 1) * 40;
+  panner.connect(audioCtx.destination);
+  distanceGain.connect(panner);
+  filter.connect(distanceGain);
+
+  if (audioCtx.listener) {
+    const l = audioCtx.listener;
+    if (l.positionX) {
+      try {
+        l.positionX.setValueAtTime(0, now);
+        l.positionY.setValueAtTime(0, now);
+        l.positionZ.setValueAtTime(0, now);
+        l.forwardX.setValueAtTime(0, now);
+        l.forwardY.setValueAtTime(0, now);
+        l.forwardZ.setValueAtTime(-1, now);
+        l.upX.setValueAtTime(0, now);
+        l.upY.setValueAtTime(1, now);
+        l.upZ.setValueAtTime(0, now);
+      } catch (e) {
+        if (l.setPosition) l.setPosition(0, 0, 0);
+        if (l.setOrientation) l.setOrientation(0, 0, -1, 0, 1, 0);
+      }
+    } else if (l.setPosition) {
+      l.setPosition(0, 0, 0);
+      l.setOrientation(0, 0, -1, 0, 1, 0);
+    }
+  }
+
+  function strikeMetal(baseFreq, volume, noiseMix, duration, connectionPoint) {
+    const isAnalog = document.body.classList.contains('analog-active');
+    const jitter = (Math.random() * 2 - 1) * (isAnalog ? 95 : 40);
     const freq = baseFreq + jitter;
-    const dynVol = volume * (0.8 + Math.random() * 0.4);
+    const dynVol = volume * (isAnalog ? 1.45 : 1.0) * (0.8 + Math.random() * 0.4);
 
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
-    osc1.type = 'triangle';
+    osc1.type = isAnalog ? 'sawtooth' : 'triangle';
     osc1.frequency.setValueAtTime(freq * 1.8, now);
     osc1.frequency.exponentialRampToValueAtTime(freq * 0.5, now + duration);
     gain1.gain.setValueAtTime(dynVol, now);
@@ -582,12 +716,12 @@ function clack(type, keyName = '') {
     const noise = audioCtx.createBufferSource();
     const noiseGain = audioCtx.createGain();
     noise.buffer = noiseBuffer;
-    noiseGain.gain.setValueAtTime(dynVol * noiseMix, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.7);
+    noiseGain.gain.setValueAtTime(dynVol * (isAnalog ? noiseMix * 1.4 : noiseMix), now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * (isAnalog ? 0.85 : 0.7));
 
-    osc1.connect(gain1); gain1.connect(filter);
-    osc2.connect(gain2); gain2.connect(filter);
-    noise.connect(noiseGain); noiseGain.connect(filter);
+    osc1.connect(gain1); gain1.connect(connectionPoint);
+    osc2.connect(gain2); gain2.connect(connectionPoint);
+    noise.connect(noiseGain); noiseGain.connect(connectionPoint);
 
     osc1.start(now); osc1.stop(now + duration + 0.02);
     osc2.start(now); osc2.stop(now + duration + 0.02);
@@ -596,13 +730,12 @@ function clack(type, keyName = '') {
 
   switch (type) {
     case 'type': 
-      strikeMetal(320, 0.45, 3.8, 0.06);
+      strikeMetal(320, 0.45, 3.8, 0.06, filter);
       break;
     case 'space': 
-      strikeMetal(180, 0.55, 2.5, 0.10);
+      strikeMetal(180, 0.55, 2.5, 0.10, filter);
       break;
     case 'add': 
-      // チンッ！と空間に抜ける改行ベル
       const bellOsc = audioCtx.createOscillator();
       const bellGain = audioCtx.createGain();
       bellOsc.type = 'sine';
@@ -612,18 +745,86 @@ function clack(type, keyName = '') {
       bellOsc.connect(bellGain); bellGain.connect(audioCtx.destination);
       bellOsc.start(now); bellOsc.stop(now + 0.2);
 
-      strikeMetal(140, 0.60, 4.5, 0.18);
+      const slidePanner = audioCtx.createPanner();
+      slidePanner.panningModel = 'HRTF';
+      
+      if (slidePanner.positionX) {
+        slidePanner.positionY.setValueAtTime(-0.15, now);
+        slidePanner.positionZ.setValueAtTime(-0.25, now); 
+        slidePanner.positionX.setValueAtTime(0.15, now); 
+        slidePanner.positionX.linearRampToValueAtTime(-0.15, now + 0.18); 
+      } else if (slidePanner.setPosition) {
+        slidePanner.setPosition(0.15, -0.15, -0.25);
+        setTimeout(() => {
+          if (slidePanner.setPosition) slidePanner.setPosition(-0.15, -0.15, -0.25);
+        }, 80);
+      }
+      
+      slidePanner.connect(audioCtx.destination);
+      strikeMetal(140, 0.60, 4.5, 0.18, slidePanner);
       break;
     case 'delete': 
-      strikeMetal(220, 0.40, 3.0, 0.08);
+      strikeMetal(220, 0.40, 3.0, 0.08, filter);
       break;
     case 'check': 
-      strikeMetal(480, 0.42, 1.5, 0.05);
+      strikeMetal(480, 0.42, 1.5, 0.05, filter);
+      break;
+    case 'analog-toggle': 
+      const heavyOsc1 = audioCtx.createOscillator();
+      const heavyGain1 = audioCtx.createGain();
+      heavyOsc1.type = 'sawtooth';
+      heavyOsc1.frequency.setValueAtTime(90, now);
+      heavyOsc1.frequency.exponentialRampToValueAtTime(35, now + 0.14);
+      heavyGain1.gain.setValueAtTime(0.65, now);
+      heavyGain1.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      heavyOsc1.connect(heavyGain1); heavyGain1.connect(panner);
+      heavyOsc1.start(now); heavyOsc1.stop(now + 0.2);
+
+      const heavyOsc2 = audioCtx.createOscillator();
+      const heavyGain2 = audioCtx.createGain();
+      heavyOsc2.type = 'triangle';
+      heavyOsc2.frequency.setValueAtTime(130, now + 0.04);
+      heavyOsc2.frequency.exponentialRampToValueAtTime(45, now + 0.18);
+      heavyGain2.gain.setValueAtTime(0.55, now + 0.04);
+      heavyGain2.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      heavyOsc2.connect(heavyGain2); heavyGain2.connect(panner);
+      heavyOsc2.start(now + 0.04); heavyOsc2.stop(now + 0.22);
+
+      const motorOsc = audioCtx.createOscillator();
+      const motorGain = audioCtx.createGain();
+      motorOsc.type = 'triangle';
+      motorOsc.frequency.setValueAtTime(140, now + 0.14);
+      motorOsc.frequency.linearRampToValueAtTime(520, now + 0.68);
+
+      const modOsc = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+      modOsc.frequency.setValueAtTime(42, now); 
+      modGain.gain.setValueAtTime(22, now);
+      modOsc.connect(modGain); modGain.connect(motorOsc.frequency);
+
+      motorGain.gain.setValueAtTime(0.001, now + 0.14);
+      motorGain.gain.linearRampToValueAtTime(0.28, now + 0.24);
+      motorGain.gain.setValueAtTime(0.28, now + 0.52);
+      motorGain.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
+
+      motorOsc.connect(motorGain); motorGain.connect(panner);
+      modOsc.start(now + 0.14); modOsc.stop(now + 0.68);
+      motorOsc.start(now + 0.14); motorOsc.stop(now + 0.68);
+      break;
+    case 'ribbon-toggle': 
+      const ribbonOsc = audioCtx.createOscillator();
+      const ribbonGain = audioCtx.createGain();
+      ribbonOsc.type = 'triangle';
+      ribbonOsc.frequency.setValueAtTime(240, now);
+      ribbonOsc.frequency.exponentialRampToValueAtTime(110, now + 0.06);
+      ribbonGain.gain.setValueAtTime(0.3, now);
+      ribbonGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      ribbonOsc.connect(ribbonGain); ribbonGain.connect(panner);
+      ribbonOsc.start(now); ribbonOsc.stop(now + 0.08);
       break;
   }
 }
 
-// 昨日のやり残しを未練がましく今日の紙に糊付けする処理
 function shiftLeftovers(todayKey) {
   const all = uncoverArchive();
   const keys = Object.keys(all).sort();
@@ -713,15 +914,59 @@ function rescueScrap() {
   hideToast();
 }
 
+function toggleDarkMode() {
+  const active = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('jot_dark_mode', active ? 'true' : 'false');
+  clack('check'); 
+  if (active) {
+    showToast('🌙 ダークモード');
+  } else {
+    showToast('☀️ ライトモード');
+  }
+}
+
+function toggleAnalogMode() {
+  const active = document.body.classList.toggle('analog-active');
+  localStorage.setItem('jot_analog_mode', active ? 'true' : 'false');
+  printGlyphs();
+  clack('analog-toggle'); 
+  if (active) {
+    showToast('📟 Ultra-Analog Mode: Enabled');
+  } else {
+    showToast('📱 Digital Mode: Enabled');
+  }
+}
+
+function toggleRibbon() {
+  const active = document.body.classList.toggle('ribbon-red');
+  localStorage.setItem('jot_ribbon_red', active ? 'true' : 'false');
+  clack('ribbon-toggle');
+  if (active) {
+    showToast('🔴 Ribbon: Red Ink装填');
+  } else {
+    showToast('⚫ Ribbon: Black Ink装填');
+  }
+}
+
 function printGlyphs() {
   const ul = document.getElementById('paper-lines');
   ul.innerHTML = '';
+  const isAnalog = document.body.classList.contains('analog-active');
+  
   scroll.glyphs.forEach((item, idx) => {
     const li = document.createElement('li');
     li.className = 'paper-line'
       + (item.type === 'heading' ? ' type-heading' : item.type === 'memo' ? ' type-memo' : '')
       + (item.checked ? ' done' : '');
     li.dataset.idx = idx;
+
+    if (isAnalog) {
+      const tilt = (Math.random() - 0.5) * 0.7; 
+      const shiftY = (Math.random() - 0.5) * 1.6; 
+      li.style.transform = `rotate(${tilt}deg) translateY(${shiftY}px)`;
+    } else {
+      li.style.transform = '';
+    }
 
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
@@ -918,6 +1163,18 @@ ink.addEventListener('keydown', e => {
     e.preventDefault();
     const raw = ink.value.trim();
     if (!raw) return;
+
+    if (raw === '#analog' || raw === '#retro') {
+      toggleAnalogMode();
+      ink.value = '';
+      return;
+    }
+    if (raw === '#ribbon' || raw === '#color') {
+      toggleRibbon();
+      ink.value = '';
+      return;
+    }
+
     scroll.glyphs.push({ id: uid(), type: parseType(raw), text: raw, checked: false });
     writeScroll(activeDate, scroll);
     ink.value = '';
@@ -939,15 +1196,6 @@ window.addEventListener('keydown', e => {
   }
 });
 
-let hintShown = false;
-ink.addEventListener('input', () => {
-  if (!hintShown && ink.value.length > 0) {
-    hintShown = true;
-    document.getElementById('hint').classList.add('visible');
-    setTimeout(() => document.getElementById('hint').classList.remove('visible'), 4000);
-  }
-});
-
 document.getElementById('page').addEventListener('click', e => {
   if (e.target === document.getElementById('page') ||
       e.target === document.getElementById('paper-lines') ||
@@ -956,7 +1204,6 @@ document.getElementById('page').addEventListener('click', e => {
   }
 });
 
-// カレンダー開閉用の切り出し
 let calDate = new Date();
 const dateLabel = document.getElementById('date-label');
 const picker = document.getElementById('calendar-picker');
@@ -1029,6 +1276,8 @@ document.getElementById('menu-btn').addEventListener('click', openDrawer);
 document.getElementById('drawer-close').addEventListener('click', closeDrawer);
 document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
 
+document.getElementById('theme-btn').addEventListener('click', toggleDarkMode);
+
 function downloadText(filename, content, mime) {
   const blob = new Blob([content], { type: mime + ';charset=utf-8' });
   const url  = URL.createObjectURL(blob);
@@ -1083,7 +1332,7 @@ document.getElementById('import-input').addEventListener('change', function() {
       if (typeof data !== 'object' || Array.isArray(data) || data === null) throw new Error();
       const validKeys = Object.keys(data).filter(k => /^\d{4}\.\d{2}\.\d{2}$/.test(k));
       if (validKeys.length === 0) throw new Error();
-      saveAll(Object.assign({}, uncoverArchive(), data));
+      sealArchive(Object.assign({}, uncoverArchive(), data));
       flipTo(activeDate);
       showToast('インポート完了 — ' + validKeys.length + ' 日分');
     } catch {
@@ -1094,7 +1343,6 @@ document.getElementById('import-input').addEventListener('change', function() {
   reader.readAsText(file);
 });
 
-// 静かな改ページ判定（深夜リロード処理）
 function midnightRollover() {
   const now = new Date();
   const next = new Date(now);
@@ -1102,17 +1350,25 @@ function midnightRollover() {
   setTimeout(() => location.reload(), next - now);
 }
 
-// 起動
+// 起動時に前回の明暗、アナログ、赤リボン設定を紐解く
+const savedDarkMode = localStorage.getItem('jot_dark_mode');
+if (savedDarkMode === 'true' || (savedDarkMode === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.body.classList.add('dark-mode');
+}
+const savedAnalogMode = localStorage.getItem('jot_analog_mode') === 'true';
+if (savedAnalogMode) {
+  document.body.classList.add('analog-active');
+}
+const savedRibbonMode = localStorage.getItem('jot_ribbon_red') === 'true';
+if (savedRibbonMode) {
+  document.body.classList.add('ribbon-red');
+}
+
 const today = getTodayKey();
 shiftLeftovers(today);
 flipTo(today);
 dipNib();
 midnightRollover();
-
-if (scroll.glyphs.some(it => it.carriedFrom)) {
-  const n = scroll.glyphs.filter(it => it.carriedFrom).length;
-  setTimeout(() => showToast(`昨日の未完了を ${n} 件引き継ぎました`), 600);
-}
 </script>
 </body>
 </html>
